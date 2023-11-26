@@ -1,19 +1,23 @@
 # .my-bash-environment
 
-## Installation
+My configs to easily download and use on new machines.
+
+## Install configs
 
 1. Install `curl`;
 2. Execute:
 
     ```bash
-    curl ... && \
+    curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh > "${HOME}/.my-bash-environment/main.sh" && \
+    source "${HOME}/.my-bash-environment/main.sh" && \
     echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc
     ```
 
-## Update
+## Update configs
 
 Execute:
 
 ```bash
-curl ...
+curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh > "${HOME}/.my-bash-environment/main.sh" && \
+source "${HOME}/.my-bash-environment/main.sh"
 ```
