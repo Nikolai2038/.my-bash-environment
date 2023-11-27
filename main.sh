@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Exit on error
-set -e
-
 # ----------------------------------------
 # Settings
 # ----------------------------------------
@@ -165,6 +162,3 @@ alias gs="git status"
 alias gc="git add . && git commit -m"
 
 clear
-
-# Do not exit on errors in session
-set +e
