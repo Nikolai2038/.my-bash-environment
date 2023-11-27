@@ -140,14 +140,6 @@ alias ll="ls -l -v --group-directories-first --human-readable --time-style=long-
 alias lla="ll --almost-all"
 alias apt="apt-get"
 
-# Environment modules
-export MODULEPATH="${HOME}/environment-modules:${MODULEPATH}"
-
-# pyenv
-export PATH="${HOME}/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-
 # Use as alias but without space
 function examples() {
     less -R <<< "$(curl "https://cheat.sh/${*}")" || return "$?"
