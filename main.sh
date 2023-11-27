@@ -3,14 +3,12 @@
 # Exit on error
 set -e
 
-# My scripts
-
 # ----------------------------------------
 # Settings
 # ----------------------------------------
 export EDITOR=vim
 
-# TODO: Find different approach
+# TODO: Maybe find different approach
 if [ "$(whoami)" == "root" ]; then
     is_root=1
 else
@@ -19,15 +17,15 @@ fi
 
 # Different color for root
 if [ "${is_root}" -eq 1 ]; then
-    C_BORDER='\e[0;95m'
+    C_BORDER="\[\033[38;5;90m\]"
 else
-    C_BORDER='\e[0;94m'
+    C_BORDER="\[\033[38;5;27m\]"
 fi
 
-C_TEXT='\e[0;92m'
-C_RESET='\e[0m'
-C_ERROR='\e[0;91m'
-C_SUCCESS='\e[0;92m'
+C_TEXT="\[\033[38;5;02m\]"
+C_RESET="\[$(tput sgr0)\]"
+C_ERROR="\[\033[38;5;01m\]"
+C_SUCCESS="\[\033[38;5;02m\]"
 
 # From 1 to 9 - Количество знаков после запятой для времени выполнения команды
 accuracy=2
@@ -107,10 +105,10 @@ export PS1="\$(
     git_branch_name=\"\$(git branch 2> /dev/null | cut -d ' ' -f 2)\" || git_branch_name=\"\"
 
     if [ -n \"\${git_branch_name}\" ]; then
-        echo -n \"─${C_BORDER}[${C_TEXT}\${git_branch_name}${C_BORDER}]${C_RESET}\";
+        echo -n \"${C_BORDER}─${C_BORDER}[${C_TEXT}\${git_branch_name}${C_BORDER}]${C_RESET}\";
     elif git status &> /dev/null; then
         # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
-        echo -n \"─${C_BORDER}[${C_ERROR}???${C_BORDER}]${C_RESET}\";
+        echo -n \"${C_BORDER}─${C_BORDER}[${C_ERROR}???${C_BORDER}]${C_RESET}\";
     fi
 
     # Extra new line between commands
