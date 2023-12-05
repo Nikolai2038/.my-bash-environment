@@ -153,14 +153,19 @@ alias apt="apt-get"
 # shellcheck disable=2139
 alias au="${sudo_prefix}apt update && ${sudo_prefix}apt dist-upgrade -y && ${sudo_prefix}apt autoremove -y"
 function ai() {
-    "${sudo_prefix}"apt update || return "$?"
-    "${sudo_prefix}"apt install -y "$@" || return "$?"
-    "${sudo_prefix}"apt autoremove -y || return "$?"
+    # shellcheck disable=2086
+    ${sudo_prefix}apt update || return "$?"
+    # shellcheck disable=2086
+    ${sudo_prefix}apt install -y "$@" || return "$?"
+    # shellcheck disable=2086
+    ${sudo_prefix}apt autoremove -y || return "$?"
     return 0
 }
 function ar() {
-    "${sudo_prefix}"apt remove -y "$@" || return "$?"
-    "${sudo_prefix}"apt autoremove -y || return "$?"
+    # shellcheck disable=2086
+    ${sudo_prefix}apt remove -y "$@" || return "$?"
+    # shellcheck disable=2086
+    ${sudo_prefix}apt autoremove -y || return "$?"
     return 0
 }
 
@@ -170,7 +175,8 @@ alias gc="git add . && git commit -m"
 
 # Auto-color for "less"
 if ! source-highlight --version &> /dev/null; then
-    "${sudo_prefix}"apt -y install source-highlight
+    # shellcheck disable=2086
+    ${sudo_prefix}apt install -y source-highlight
 fi
 lesspipe_script="$(find /usr -name 'src-hilite-lesspipe.sh' -type f 2> /dev/null | head -n 1)"
 export LESSOPEN="| ${lesspipe_script} %s"
