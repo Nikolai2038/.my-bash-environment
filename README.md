@@ -2,16 +2,30 @@
 
 My configs to easily download and use on new machines.
 
-## Install/Update
+## Install
 
 1. Install `curl`;
 2. Execute:
 
     ```bash
-    mkdir --parents "${HOME}/.my-bash-environment" && \
-    curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh > "${HOME}/.my-bash-environment/main.sh" && \
-    source "${HOME}/.my-bash-environment/main.sh" && \
-    if ! cat $HOME/.bashrc | grep '^source "${HOME}/.my-bash-environment/main.sh"$' &> /dev/null; then \
-        echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc; \
-    fi
+    curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh | bash
     ```
+
+## Update
+
+Script will autoupdate itself.
+
+If you don't want this, change (add):
+
+```bash
+source "${HOME}/.my-bash-environment/main.sh"
+```
+
+to
+
+```bash
+DISABLE_BASH_ENVIRONMENT_AUTOUPDATE=1
+source "${HOME}/.my-bash-environment/main.sh"
+```
+
+in your `.bashrc`.

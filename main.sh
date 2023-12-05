@@ -8,8 +8,10 @@ export EDITOR=vim
 # TODO: Maybe find different approach
 if [ "$(whoami)" == "root" ]; then
     is_root=1
+    sudo_prefix=""
 else
     is_root=0
+    sudo_prefix="sudo "
 fi
 
 # Different color for root
@@ -71,6 +73,7 @@ export PROMPT_COMMAND="
     is_command_executing=0;
 "
 
+# shellcheck disable=SC2154
 export PS1="\$(
     command_result=\$?;
 
@@ -133,9 +136,8 @@ export PS2="\$(
     echo -n \"${C_BORDER}├─${C_BORDER}> ${C_RESET}\";
 )"
 
-alias ll="ls -l -v --group-directories-first --human-readable --time-style=long-iso --color"
+alias ll="ls -l -v -F --group-directories-first --human-readable --time-style=long-iso --color"
 alias lla="ll --almost-all"
-alias apt="apt-get"
 
 # Use as alias but without space
 function examples() {
@@ -144,16 +146,18 @@ function examples() {
 }
 
 # APT aliases
-alias au="sudo apt update && sudo apt dist-upgrade -y"
+alias apt="apt-get"
+# shellcheck disable=2139
+alias au="${sudo_prefix}apt update && ${sudo_prefix}apt dist-upgrade -y && ${sudo_prefix}apt autoremove -y"
 function ai() {
-    sudo apt-get update || return "$?"
-    sudo apt-get install -y "$@" || return "$?"
-    sudo apt-get autoremove -y || return "$?"
+    "${sudo_prefix}"apt update || return "$?"
+    "${sudo_prefix}"apt install -y "$@" || return "$?"
+    "${sudo_prefix}"apt autoremove -y || return "$?"
     return 0
 }
 function ar() {
-    sudo apt-get remove -y "$@" || return "$?"
-    sudo apt-get autoremove -y || return "$?"
+    "${sudo_prefix}"apt remove -y "$@" || return "$?"
+    "${sudo_prefix}"apt autoremove -y || return "$?"
     return 0
 }
 
@@ -161,4 +165,36 @@ function ar() {
 alias gs="git status"
 alias gc="git add . && git commit -m"
 
+# Auto-color for "less"
+if ! source-highlight --version &> /dev/null; then
+    "${sudo_prefix}"apt -y install source-highlight
+fi
+lesspipe_script="$(find /usr -name 'src-hilite-lesspipe.sh' -type f 2> /dev/null | head -n 1)"
+export LESSOPEN="| ${lesspipe_script} %s"
+export LESS=' -R '
+
+# ========================================
+# Autoupdate
+# ========================================
+was_autoupdate_failed=0
+if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
+    # If not development
+    if ! git remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git' &> /dev/null; then
+        mkdir --parents "${HOME}/.my-bash-environment"
+        curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
+    fi
+    # shellcheck disable=2016
+    if ! grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
+        echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc
+    fi
+fi
+# ========================================
+
 clear
+
+if [ "${was_autoupdate_failed}" = "1" ]; then
+    echo "Failed to update ~/.my-bash-environment/main.sh - autoupdate skipped." >&2
+fi
+
+# This must be last command in this file
+is_first_command=-1
