@@ -179,9 +179,9 @@ export LESS=' -R '
 was_autoupdate_failed=0
 if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
     # If not development
-    if ! git remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git' &> /dev/null; then
+    if ! { git remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
         mkdir --parents "${HOME}/.my-bash-environment"
-        curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
+        curl --silent https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
     fi
     # shellcheck disable=2016
     if ! grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
