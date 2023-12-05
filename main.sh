@@ -136,6 +136,9 @@ export PS2="\$(
     echo -n \"${C_BORDER}├─${C_BORDER}> ${C_RESET}\";
 )"
 
+# To use aliases in sudo too
+alias sudo="sudo "
+
 alias ll="ls -l -v -F --group-directories-first --human-readable --time-style=long-iso --color"
 alias lla="ll --almost-all"
 
