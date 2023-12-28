@@ -14,6 +14,12 @@ else
     sudo_prefix="sudo "
 fi
 
+if [ -d "/mnt/wsl-original" ]; then
+    is_wsl=1
+else
+    is_wsl=0
+fi
+
 # Different color for root
 if [ "${is_root}" -eq 1 ]; then
     C_BORDER="\[\033[38;5;90m\]"
@@ -202,6 +208,14 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
     fi
 fi
 # ========================================
+
+if [ "${is_wsl}" ]; then
+    # Fix warnings in graphic apps
+    dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
+
+    # Fix locale
+    . /etc/default/locale
+fi
 
 clear
 
