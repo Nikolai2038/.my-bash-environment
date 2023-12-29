@@ -210,8 +210,12 @@ fi
 # ========================================
 
 if [ "${is_wsl}" ]; then
-    # Fix warnings in graphic apps
-    dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
+    # Make sure we run this command only one time in user session
+    # Is dbus-daemon is launched in the session, this command will print processes
+    if ! busctl list --user > /dev/null; then
+        # Fix warnings in graphic apps
+        dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
+    fi
 
     # Fix locale
     . /etc/default/locale
