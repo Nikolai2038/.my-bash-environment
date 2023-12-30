@@ -209,7 +209,7 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
 fi
 # ========================================
 
-if [ "${is_wsl}" ]; then
+if [ "${is_wsl}" = "1" ]; then
     # Make sure we run this command only one time in user session
     # Is dbus-daemon is launched in the session, this command will print processes
     if ! busctl list --user > /dev/null; then
@@ -219,6 +219,16 @@ if [ "${is_wsl}" ]; then
 
     # Fix locale
     . /etc/default/locale
+# Apply only on laptop with non root user
+elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
+    # Check, if connected via xrdp - do not use scaling
+    # TODO: Maybe find different approach
+    if [ "${DISPLAY}" = ":10.0" ]; then
+        gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
+    # If not connected via xrdp - use scaling
+    else
+	gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
+    fi
 fi
 
 clear
