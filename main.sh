@@ -225,8 +225,8 @@ elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
     # TODO: Maybe find different approach
     if [ "${DISPLAY}" = ":10.0" ]; then
         gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
-    # If not connected via xrdp - use scaling
-    else
+    # If not connected via xrdp and not ssh - use scaling
+    elif [ -n "${DISPLAY}" ]; then 
 	gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
     fi
 fi
