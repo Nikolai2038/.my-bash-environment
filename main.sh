@@ -145,7 +145,11 @@ export PS2="\$(
 # To use aliases in sudo too
 alias sudo="sudo "
 
-# ls aliases
+# We use some functions as aliases.
+# But we must unalias functions names if they exists, because alias have more priority than function.
+
+# ls aliases.
+unalias ll &> /dev/null
 function ll() {
     # We use "sed" to remove "total".
     # For "total" we check only beginning of the line because of units after number.
@@ -153,6 +157,7 @@ function ll() {
     return 0
 }
 alias lla="ll  --almost-all"
+unalias lls &> /dev/null
 function lls() {
     # We don't use "-1" from "ls" because it does not show us where links are pointing.
     # Instead, we use "cut".
@@ -162,6 +167,7 @@ function lls() {
 }
 alias llsa="lls --almost-all"
 # Aliases to print list in Markdown format
+unalias llsl &> /dev/null
 function llsl() {
     lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
     return 0
@@ -170,6 +176,7 @@ alias llsal="llsl --almost-all"
 alias llsla="llsal"
 
 # Use as alias but without space
+unalias examples &> /dev/null
 function examples() {
     less -R <<< "$(curl "https://cheat.sh/${*}")" || return "$?"
     return 0
@@ -180,6 +187,7 @@ function examples() {
 alias apt="apt-get"
 # shellcheck disable=2139
 alias au="${sudo_prefix}apt-get update && ${sudo_prefix}apt-get dist-upgrade -y && ${sudo_prefix}apt-get autoremove -y"
+unalias ai &> /dev/null
 function ai() {
     # shellcheck disable=2086
     ${sudo_prefix}apt-get update || return "$?"
@@ -189,6 +197,7 @@ function ai() {
     ${sudo_prefix}apt-get autoremove -y || return "$?"
     return 0
 }
+unalias ar &> /dev/null
 function ar() {
     # shellcheck disable=2086
     ${sudo_prefix}apt-get remove -y "$@" || return "$?"
@@ -204,6 +213,7 @@ alias ga="git add ."
 alias gc="git commit -m"
 alias gac="ga && gc"
 alias gp="git push"
+unalias gacp &> /dev/null
 function gacp() {
     gac "${@}" || return "$?"
     gp || return "$?"
