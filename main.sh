@@ -146,13 +146,18 @@ export PS2="\$(
 alias sudo="sudo "
 
 # ls aliases
-alias ll="ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso"
+function ll() {
+    # We use "sed" to remove "total".
+    # For "total" we check only beginning of the line because of units after number.
+    ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
+    return 0
+}
 alias lla="ll  --almost-all"
 function lls() {
     # We don't use "-1" from "ls" because it does not show us where links are pointing.
     # Instead, we use "cut".
-    # We also use "sed" to remove "total" line and "tr" to remove duplicate spaces - for "cut" to work properly.
-    ll "${@}" | sed -E '/^total [0-9]+$/d' | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
+    # We use "tr" to remove duplicate spaces - for "cut" to work properly.
+    ll "${@}" | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
     return 0
 }
 alias llsa="lls --almost-all"
@@ -190,7 +195,13 @@ alias gs="git status"
 alias gl="git log --pretty=oneline"
 alias ga="git add ."
 alias gc="git commit -m"
+alias gac="ga && gc"
 alias gp="git push"
+function gacp() {
+    gac "${@}" || return "$?"
+    gp || return "$?"
+    return 0
+}
 
 # Auto-color for "less"
 if ! source-highlight --version &> /dev/null; then
