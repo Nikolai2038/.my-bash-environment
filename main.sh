@@ -161,6 +161,13 @@ function lls() {
     return 0
 }
 alias llsa="lls --almost-all"
+# Aliases to print list in Markdown format
+function llsl() {
+    lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
+    return 0
+}
+alias llsal="llsl --almost-all"
+alias llsla="llsal"
 
 # Use as alias but without space
 function examples() {
