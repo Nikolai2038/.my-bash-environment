@@ -145,8 +145,17 @@ export PS2="\$(
 # To use aliases in sudo too
 alias sudo="sudo "
 
-alias ll="ls -l -v -F --group-directories-first --human-readable --time-style=long-iso --color"
-alias lla="ll --almost-all"
+# ls aliases
+alias ll="ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso"
+alias lla="ll  --almost-all"
+function lls() {
+    # We don't use "-1" from "ls" because it does not show us where links are pointing.
+    # Instead, we use "cut".
+    # We also use "tail" to remove "total" line and "tr" to remove duplicate spaces - for "cut" to work properly.
+    ll "${@}" | tail --lines +2 | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
+    return 0
+}
+alias llsa="lls --almost-all"
 
 # Use as alias but without space
 function examples() {
@@ -178,7 +187,10 @@ function ar() {
 
 # GIT aliases
 alias gs="git status"
-alias gc="git add . && git commit -m"
+alias gl="git log --pretty=oneline"
+alias ga="git add ."
+alias gc="git commit -m"
+alias gp="git push"
 
 # Auto-color for "less"
 if ! source-highlight --version &> /dev/null; then
@@ -209,6 +221,13 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
 fi
 # ========================================
 
+# TODO: Maybe find different approach
+if [ "${DISPLAY}" = ":10.0" ]; then
+    is_xrdp=1
+else
+    is_xrdp=0
+fi
+
 if [ "${is_wsl}" = "1" ]; then
     # Make sure we run this command only one time in user session
     # Is dbus-daemon is launched in the session, this command will print processes
@@ -222,13 +241,21 @@ if [ "${is_wsl}" = "1" ]; then
 # Apply only on laptop with non root user
 elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
     # Check, if connected via xrdp - do not use scaling
-    # TODO: Maybe find different approach
-    if [ "${DISPLAY}" = ":10.0" ]; then
+    if [ "${is_xrdp}" = "1" ]; then
         gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
     # If not connected via xrdp and not ssh - use scaling
     elif [ -n "${DISPLAY}" ]; then 
 	gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
     fi
+fi
+
+# For some reason, switching keyboard layout stop working at some point when connected via xrdp.
+# But if we change GNOME Tweaks settings, it will be fixed.
+# So here we change keyboard setting to empty value and then restore it.
+if [ "${is_xrdp}" = "1" ]; then
+    options="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
+    gsettings set org.gnome.desktop.input-sources xkb-options "[]"
+    gsettings set org.gnome.desktop.input-sources xkb-options "${options}"
 fi
 
 clear
