@@ -151,8 +151,8 @@ alias lla="ll  --almost-all"
 function lls() {
     # We don't use "-1" from "ls" because it does not show us where links are pointing.
     # Instead, we use "cut".
-    # We also use "tail" to remove "total" line and "tr" to remove duplicate spaces - for "cut" to work properly.
-    ll "${@}" | tail --lines +2 | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
+    # We also use "sed" to remove "total" line and "tr" to remove duplicate spaces - for "cut" to work properly.
+    ll "${@}" | sed -E '/^total [0-9]+$/d' | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
     return 0
 }
 alias llsa="lls --almost-all"
