@@ -7,24 +7,24 @@ export EDITOR=vim
 
 # TODO: Maybe find different approach
 if [ "$(whoami)" == "root" ]; then
-    is_root=1
-    sudo_prefix=""
+  is_root=1
+  sudo_prefix=""
 else
-    is_root=0
-    sudo_prefix="sudo "
+  is_root=0
+  sudo_prefix="sudo "
 fi
 
 if [ -d "/mnt/wsl-original" ]; then
-    is_wsl=1
+  is_wsl=1
 else
-    is_wsl=0
+  is_wsl=0
 fi
 
 # Different color for root
 if [ "${is_root}" -eq 1 ]; then
-    C_BORDER="\[\033[38;5;90m\]"
+  C_BORDER="\[\033[38;5;90m\]"
 else
-    C_BORDER="\[\033[38;5;27m\]"
+  C_BORDER="\[\033[38;5;27m\]"
 fi
 
 C_TEXT="\[\033[38;5;02m\]"
@@ -63,40 +63,40 @@ alias reset="is_first_command=-1; reset"
 is_command_executing=0
 
 function get_seconds_parts() {
-    local seconds
-    seconds="$(date +%s)" || return "$?"
+  local seconds
+  seconds="$(date +%s)" || return "$?"
 
-    local extra_second_parts
-    extra_second_parts="$(date +%N)" || return "$?"
+  local extra_second_parts
+  extra_second_parts="$(date +%N)" || return "$?"
 
-    # Remove zeros (to avoid "printf: invalid octal number" error) with sed (because it does not always work with "${extra_second_parts#0}")
-    extra_second_parts="$(echo "${extra_second_parts}" | sed -En 's/^[0]*([0-9]+?)$/\1/p')" || return "$?"
+  # Remove zeros (to avoid "printf: invalid octal number" error) with sed (because it does not always work with "${extra_second_parts#0}")
+  extra_second_parts="$(echo "${extra_second_parts}" | sed -En 's/^[0]*([0-9]+?)$/\1/p')" || return "$?"
 
-    extra_second_parts="$(printf '%09d' "${extra_second_parts}")" || return "$?"
-    extra_second_parts="${extra_second_parts:0:${accuracy}}" || return "$?"
+  extra_second_parts="$(printf '%09d' "${extra_second_parts}")" || return "$?"
+  extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
 
-    echo "${seconds}${extra_second_parts}"
+  echo "${seconds}${extra_second_parts}"
 
-    return 0
+  return 0
 }
 
 # Выполняется сразу после запуска команды
-trap "
-    if [ \"\${is_command_executing}\" == \"0\" ]; then
+trap '
+    if [ "${is_command_executing}" == "0" ]; then
         is_command_executing=1;
-        timestamp_start_seconds_parts=\"\$(get_seconds_parts)\";
+        timestamp_start_seconds_parts="$(get_seconds_parts)";
     fi
-" DEBUG
+' DEBUG
 
 # Выполняется перед выводом PS1
-export PROMPT_COMMAND="
-    if [ \"\${is_first_command}\" == \"-1\" ]; then
+export PROMPT_COMMAND='
+    if [ "${is_first_command}" == "-1" ]; then
         is_first_command=1;
     else
         is_first_command=0;
     fi;
     is_command_executing=0;
-"
+'
 
 # shellcheck disable=SC2154
 export PS1="\$(
@@ -170,26 +170,26 @@ alias sudo="sudo "
 # ls aliases.
 unalias ll &> /dev/null
 function ll() {
-    # We use "sed" to remove "total".
-    # For "total" we check only beginning of the line because of units after number.
-    ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
-    return 0
+  # We use "sed" to remove "total".
+  # For "total" we check only beginning of the line because of units after number.
+  ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
+  return 0
 }
 alias lla="ll  --almost-all"
 unalias lls &> /dev/null
 function lls() {
-    # We don't use "-1" from "ls" because it does not show us where links are pointing.
-    # Instead, we use "cut".
-    # We use "tr" to remove duplicate spaces - for "cut" to work properly.
-    ll "${@}" | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
-    return 0
+  # We don't use "-1" from "ls" because it does not show us where links are pointing.
+  # Instead, we use "cut".
+  # We use "tr" to remove duplicate spaces - for "cut" to work properly.
+  ll "${@}" | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
+  return 0
 }
 alias llsa="lls --almost-all"
 # Aliases to print list in Markdown format
 unalias llsl &> /dev/null
 function llsl() {
-    lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
-    return 0
+  lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
+  return 0
 }
 alias llsal="llsl --almost-all"
 alias llsla="llsal"
@@ -197,8 +197,8 @@ alias llsla="llsal"
 # Use as alias but without space
 unalias examples &> /dev/null
 function examples() {
-    less -R <<< "$(curl "https://cheat.sh/${*}")" || return "$?"
-    return 0
+  less -R <<< "$(curl "https://cheat.sh/${*}")" || return "$?"
+  return 0
 }
 
 # APT aliases
@@ -208,21 +208,21 @@ alias apt="apt-get"
 alias au="${sudo_prefix}apt-get update && ${sudo_prefix}apt-get dist-upgrade -y && ${sudo_prefix}apt-get autoremove -y"
 unalias ai &> /dev/null
 function ai() {
-    # shellcheck disable=2086
-    ${sudo_prefix}apt-get update || return "$?"
-    # shellcheck disable=2086
-    ${sudo_prefix}apt-get install -y "$@" || return "$?"
-    # shellcheck disable=2086
-    ${sudo_prefix}apt-get autoremove -y || return "$?"
-    return 0
+  # shellcheck disable=2086
+  ${sudo_prefix}apt-get update || return "$?"
+  # shellcheck disable=2086
+  ${sudo_prefix}apt-get install -y "$@" || return "$?"
+  # shellcheck disable=2086
+  ${sudo_prefix}apt-get autoremove -y || return "$?"
+  return 0
 }
 unalias ar &> /dev/null
 function ar() {
-    # shellcheck disable=2086
-    ${sudo_prefix}apt-get remove -y "$@" || return "$?"
-    # shellcheck disable=2086
-    ${sudo_prefix}apt-get autoremove -y || return "$?"
-    return 0
+  # shellcheck disable=2086
+  ${sudo_prefix}apt-get remove -y "$@" || return "$?"
+  # shellcheck disable=2086
+  ${sudo_prefix}apt-get autoremove -y || return "$?"
+  return 0
 }
 
 # GIT aliases
@@ -234,15 +234,15 @@ alias gac="ga && gc"
 alias gp="git push"
 unalias gacp &> /dev/null
 function gacp() {
-    gac "${@}" || return "$?"
-    gp || return "$?"
-    return 0
+  gac "${@}" || return "$?"
+  gp || return "$?"
+  return 0
 }
 
 # Auto-color for "less"
 if ! source-highlight --version &> /dev/null; then
-    # shellcheck disable=2086
-    ${sudo_prefix}apt-get install -y source-highlight
+  # shellcheck disable=2086
+  ${sudo_prefix}apt-get install -y source-highlight
 fi
 lesspipe_script="$(find /usr -name 'src-hilite-lesspipe.sh' -type f 2> /dev/null | head -n 1)"
 export LESSOPEN="| ${lesspipe_script} %s"
@@ -253,69 +253,68 @@ export LESS=' -R '
 # ========================================
 was_autoupdate_failed=0
 if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
-    # If not development
-    if ! { git -C "${HOME}/.my-bash-environment" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
-        mkdir --parents "${HOME}/.my-bash-environment"
-	new_file_content="$(curl --silent https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh)" || was_autoupdate_failed=1
-	if [ "${was_autoupdate_failed}" = "0" ] && [ -n "${new_file_content}" ]; then
-	    echo "${new_file_content}" > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
-	fi
+  # If not development
+  if ! { git -C "${HOME}/.my-bash-environment" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
+    mkdir --parents "${HOME}/.my-bash-environment"
+    new_file_content="$(curl --silent https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh)" || was_autoupdate_failed=1
+    if [ "${was_autoupdate_failed}" = "0" ] && [ -n "${new_file_content}" ]; then
+      echo "${new_file_content}" > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
     fi
-    # shellcheck disable=2016
-    if ! grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
-        echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc
-    fi
+  fi
+  # shellcheck disable=2016
+  if ! grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
+    echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc
+  fi
 fi
 # ========================================
 
 # TODO: Maybe find different approach
 if [ "${DISPLAY}" = ":10.0" ]; then
-    is_xrdp=1
+  is_xrdp=1
 else
-    is_xrdp=0
+  is_xrdp=0
 fi
 
 if [ "${is_wsl}" = "1" ]; then
-    # Make sure we run this command only one time in user session
-    # Is dbus-daemon is launched in the session, this command will print processes
-    if ! busctl list --user > /dev/null; then
-        # Fix warnings in graphic apps
-        dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
-    fi
+  # Make sure we run this command only one time in user session
+  # Is dbus-daemon is launched in the session, this command will print processes
+  if ! busctl list --user > /dev/null; then
+    # Fix warnings in graphic apps
+    dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
+  fi
 
-    # Fix locale
-    . /etc/default/locale
+  # Fix locale
+  . /etc/default/locale
 # Apply only on laptop with non root user
 elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
-    # Check, if connected via xrdp - do not use scaling
-    if [ "${is_xrdp}" = "1" ]; then
-        scale="1.0"
-    # If not connected via xrdp and not ssh - use scaling
-    elif [ -n "${DISPLAY}" ]; then
-	      scale="1.5"
-    fi
-    
-    gsettings set org.gnome.desktop.interface text-scaling-factor "${scale}"
-    
-    # For Qt apps (Telegram, for example)
-    export QT_AUTO_SCREEN_SET_FACTOR=0
-    export QT_SCALE_FACTOR="${scale}"
-fi
+  # Check, if connected via xrdp - do not use scaling
+  if [ "${is_xrdp}" = "1" ]; then
+    scale="1.0"
+  # If not connected via xrdp and not ssh - use scaling
+  elif [ -n "${DISPLAY}" ]; then
+    scale="1.5"
+  fi
 
+  gsettings set org.gnome.desktop.interface text-scaling-factor "${scale}"
+
+  # For Qt apps (Telegram, for example)
+  export QT_AUTO_SCREEN_SET_FACTOR=0
+  export QT_SCALE_FACTOR="${scale}"
+fi
 
 # For some reason, switching keyboard layout stop working at some point when connected via xrdp.
 # But if we change GNOME Tweaks settings, it will be fixed.
 # So here we change keyboard setting to empty value and then restore it.
 if [ "${is_xrdp}" = "1" ]; then
-    options="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
-    gsettings set org.gnome.desktop.input-sources xkb-options "[]"
-    gsettings set org.gnome.desktop.input-sources xkb-options "${options}"
+  options="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
+  gsettings set org.gnome.desktop.input-sources xkb-options "[]"
+  gsettings set org.gnome.desktop.input-sources xkb-options "${options}"
 fi
 
 clear
 
 if [ "${was_autoupdate_failed}" = "1" ]; then
-    echo "Failed to update ~/.my-bash-environment/main.sh - autoupdate skipped." >&2
+  echo "Failed to update ~/.my-bash-environment/main.sh - autoupdate skipped." >&2
 fi
 
 # This must be last command in this file
