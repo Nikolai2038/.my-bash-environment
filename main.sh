@@ -289,12 +289,19 @@ if [ "${is_wsl}" = "1" ]; then
 elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
     # Check, if connected via xrdp - do not use scaling
     if [ "${is_xrdp}" = "1" ]; then
-        gsettings set org.gnome.desktop.interface text-scaling-factor 1.0
+        scale="1.0"
     # If not connected via xrdp and not ssh - use scaling
-    elif [ -n "${DISPLAY}" ]; then 
-	gsettings set org.gnome.desktop.interface text-scaling-factor 1.5
+    elif [ -n "${DISPLAY}" ]; then
+	      scale="1.5"
     fi
+    
+    gsettings set org.gnome.desktop.interface text-scaling-factor "${scale}"
+    
+    # For Qt apps (Telegram, for example)
+    export QT_AUTO_SCREEN_SET_FACTOR=0
+    export QT_SCALE_FACTOR="${scale}"
 fi
+
 
 # For some reason, switching keyboard layout stop working at some point when connected via xrdp.
 # But if we change GNOME Tweaks settings, it will be fixed.
