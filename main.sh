@@ -251,21 +251,126 @@ export LESS=' -R '
 # ========================================
 # Autoupdate
 # ========================================
-was_autoupdate_failed=0
-if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
-  # If not development
-  if ! { git -C "${HOME}/.my-bash-environment" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
-    mkdir --parents "${HOME}/.my-bash-environment"
-    new_file_content="$(curl --silent https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh)" || was_autoupdate_failed=1
-    if [ "${was_autoupdate_failed}" = "0" ] && [ -n "${new_file_content}" ]; then
-      echo "${new_file_content}" > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
+INSTALL_DIRECTORY_PATH="${HOME}/.my-bash-environment"
+
+function autoupdate() {
+  local was_autoupdate_failed=0
+
+  if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
+    # If not development
+    if ! { git -C "${INSTALL_DIRECTORY_PATH}" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
+      mkdir --parents "${INSTALL_DIRECTORY_PATH}"
+
+      local install_directory_backup_path="${INSTALL_DIRECTORY_PATH}.backup"
+      mv "${INSTALL_DIRECTORY_PATH}" "${install_directory_backup_path}" || return "$?"
+      # Clone all files and remove GIT info
+      git clone https://github.com/Nikolai2038/.my-bash-environment.git "${INSTALL_DIRECTORY_PATH}" && rm -rf "${INSTALL_DIRECTORY_PATH}/.git*" || was_autoupdate_failed=1
+
+      if ((was_autoupdate_failed)); then
+        # Restore old files
+        if [ -d "${install_directory_backup_path}" ]; then
+          if [ -d "${INSTALL_DIRECTORY_PATH}" ]; then
+            rm -rf "${INSTALL_DIRECTORY_PATH}" || return "$?"
+          fi
+          mv "${install_directory_backup_path}" "${INSTALL_DIRECTORY_PATH}" || return "$?"
+        fi
+      else
+        # Delete old files
+        rm -rf "${install_directory_backup_path}" || return "$?"
+      fi
     fi
   fi
-  # shellcheck disable=2016
-  if ! grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
-    echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc
-  fi
+
+  return "${was_autoupdate_failed}"
+}
+autoupdate && was_autoupdate_failed=0 || was_autoupdate_failed=1
+
+# ----------------------------------------
+# Delete old update method
+# TODO: Remove in the future
+# ----------------------------------------
+# shellcheck disable=2016
+if grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
+  sed -Ei '/source "\$\{HOME\}\/.my-bash-environment\/main.sh"/d' ~/.bashrc
 fi
+# ----------------------------------------
+
+# ----------------------------------------
+# Execute "startup.sh" script on startup (as root)
+# ----------------------------------------
+function update_startup_task_for_root() {
+  # Because we use ".my-bash-environment" from user dir, we do not run this as "root"
+  if ((is_root)); then
+    return 0
+  fi
+
+  local crontab_file="/var/spool/cron/crontabs/root"
+  local crontab_content="@reboot root sh ${INSTALL_DIRECTORY_PATH}/startup_as_root.sh"
+  echo "Checking \"${crontab_file}\"..." >&2
+  if ! sudo grep "^${crontab_content}\$" "${crontab_file}" &> /dev/null; then
+    echo "Updating \"${crontab_file}\"..." >&2
+    local command="echo \"${crontab_content}\" >> \"${crontab_file}\""
+    if ((is_root)); then
+      eval "${command}"
+    else
+      sudo su root -c "${command}"
+    fi
+    echo "\"${crontab_file}\" updated!" >&2
+  else
+    echo "\"${crontab_file}\" is already configured!" >&2
+  fi
+  echo "Current tasks:" >&2
+  sudo crontab -l -u root >&2
+}
+# ----------------------------------------
+
+# ----------------------------------------
+# Execute this script on terminal session start
+# ----------------------------------------
+function update_main_script_for_root() {
+  # Because we use ".my-bash-environment" from user dir, we do not run this as "root"
+  if ((is_root)); then
+    return 0
+  fi
+
+  local bashrc_content="source ${INSTALL_DIRECTORY_PATH}/main.sh"
+
+  local bashrc_file="/root/.bashrc"
+  echo "Checking \"${bashrc_file}\"..." >&2
+  if ! grep "^${bashrc_content}\$" "${bashrc_file}" &> /dev/null; then
+    echo "Updating \"${bashrc_file}\"..." >&2
+    sudo su root -c "echo \"${bashrc_content}\" >> \"${bashrc_file}\""
+    echo "\"${bashrc_file}\" updated!" >&2
+  else
+    echo "\"${bashrc_file}\" is already configured!" >&2
+  fi
+
+  update_startup_task_for_root || return "$?"
+}
+
+function update_main_script_for_user() {
+  # Because we use ".my-bash-environment" from user dir, we do not run this as "root"
+  if ((is_root)); then
+    return 0
+  fi
+
+  local bashrc_content="source ${INSTALL_DIRECTORY_PATH}/main.sh"
+
+  local bashrc_file="${HOME}/.bashrc"
+  echo "Checking \"${bashrc_file}\"..." >&2
+  if ! grep "^${bashrc_content}\$" "${bashrc_file}" &> /dev/null; then
+    echo "Updating \"${bashrc_file}\"..." >&2
+    echo "${bashrc_content}" >> "${bashrc_file}"
+    echo "\"${bashrc_file}\" updated!" >&2
+
+    # Because we need "root" rights to just check, we execute this only once (when ".bashrc" is updated) or by hand (using function name)
+    update_main_script_for_root
+  else
+    echo "\"${bashrc_file}\" is already configured!" >&2
+  fi
+}
+update_main_script_for_user
+# ----------------------------------------
 # ========================================
 
 # TODO: Maybe find different approach
@@ -273,6 +378,12 @@ if [ "${DISPLAY}" = ":10.0" ]; then
   is_xrdp=1
 else
   is_xrdp=0
+fi
+
+if [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
+  is_laptop=1
+else
+  is_laptop=0
 fi
 
 # Apply on WSL
@@ -286,8 +397,8 @@ if [ "${is_wsl}" = "1" ]; then
 
   # Fix locale
   . /etc/default/locale
-# Apply only on laptop with non root user
-elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
+# Apply only on laptop with non-root user
+elif [ "${is_root}" = "0" ] && [ "${is_laptop}" = "1" ]; then
   # Check, if connected via xrdp - do not use scaling
   if [ "${is_xrdp}" = "1" ]; then
     scale="1.0"
@@ -301,23 +412,64 @@ elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
   # For Qt apps (Telegram, for example)
   export QT_AUTO_SCREEN_SET_FACTOR=0
   export QT_SCALE_FACTOR="${scale}"
-
-  # /etc/resolv.conf link remains after working in WSL, so we need to remove it in Deian
-  if [ ! -e "/etc/resolv.conf" ]; then
-    rm /etc/resolv.conf
-  fi
 fi
 
-# For some reason, switching keyboard layout stop working at some point when connected via xrdp.
-# But if we change GNOME Tweaks settings, it will be fixed.
-# So here we change keyboard setting to empty value and then restore it.
-if [ "${is_xrdp}" = "1" ]; then
-  options="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
-  gsettings set org.gnome.desktop.input-sources xkb-options "[]"
-  gsettings set org.gnome.desktop.input-sources xkb-options "${options}"
-fi
+#function get_file_hash() {
+#  sha256sum "${1}" | cut -d ' ' -f 1 || return "${?}"
+#  return 0
+#}
+#
+#function update_profile_directory() {
+#  local profile_directory_path="${INSTALL_DIRECTORY_PATH}/profile.d"
+#  local profile_directory_backup_path="${profile_directory_path}.backup"
+#  mkdir --parents "${profile_directory_backup_path}" || return "$?"
+#  local profile_directory_target_path="/etc/profile.d"
+#
+#  local profile_file_path
+#  for profile_file_path in "${profile_directory_path}"/*; do
+#    local profile_file_name
+#    profile_file_name="$(basename "${profile_file_path}")" || return "$?"
+#
+#    local profile_file_backup_path="${profile_directory_backup_path}/${profile_file_name}"
+#
+#    local needs_update=0
+#
+#    if [ -f "${profile_file_backup_path}" ]; then
+#      local profile_file_hash
+#      profile_file_hash="$(get_file_hash "${profile_file_path}")" || return "$?"
+#      local profile_file_backup_hash
+#      profile_file_backup_hash="$(get_file_hash "${profile_file_backup_path}")" || return "$?"
+#
+#      if [ "${profile_file_hash}" != "${profile_file_backup_hash}" ]; then
+#        needs_update=1
+#      fi
+#    else
+#      needs_update=1
+#    fi
+#
+#    if [ "${needs_update}" = "1" ]; then
+#      local profile_file_target_path="${profile_directory_target_path}/${profile_file_name}"
+#      echo "Updating ${profile_directory_target_path}..." >&2
+#      # Update file
+#      sudo cp "${profile_file_path}" "${profile_file_target_path}" || return "$?"
+#      # Save current file for backup
+#      sudo cp "${profile_file_target_path}" "${profile_file_backup_path}" || return "$?"
+#    fi
+#  done
+#}
+#update_profile_directory
 
-clear
+# TODO: Maybe not needed
+## For some reason, switching keyboard layout stop working at some point when connected via xrdp.
+## But if we change GNOME Tweaks settings, it will be fixed.
+## So here we change keyboard setting to empty value and then restore it.
+#if [ "${is_xrdp}" = "1" ]; then
+#  options="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
+#  gsettings set org.gnome.desktop.input-sources xkb-options "[]"
+#  gsettings set org.gnome.desktop.input-sources xkb-options "${options}"
+#fi
+
+# clear
 
 if [ "${was_autoupdate_failed}" = "1" ]; then
   echo "Failed to update ~/.my-bash-environment/main.sh - autoupdate skipped." >&2
