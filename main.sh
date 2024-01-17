@@ -301,10 +301,13 @@ elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
   # For Qt apps (Telegram, for example)
   export QT_AUTO_SCREEN_SET_FACTOR=0
   export QT_SCALE_FACTOR="${scale}"
+fi
 
-  # /etc/resolv.conf link remains after working in WSL, so we need to remove it in Deian
-  if [ ! -e "/etc/resolv.conf" ]; then
-    rm /etc/resolv.conf
+if ((!is_wsl)); then
+  # /etc/resolv.conf link remains after working in WSL, so we need to remove it in Debian
+  if [ -h "/etc/resolv.conf" ] && [ ! -e "/etc/resolv.conf" ]; then
+    echo "Removing broken symlink..." >&2
+    sudo rm /etc/resolv.conf
   fi
 fi
 
