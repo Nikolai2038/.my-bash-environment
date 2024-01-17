@@ -275,6 +275,7 @@ else
   is_xrdp=0
 fi
 
+# Apply on WSL
 if [ "${is_wsl}" = "1" ]; then
   # Make sure we run this command only one time in user session
   # Is dbus-daemon is launched in the session, this command will print processes
@@ -300,6 +301,11 @@ elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
   # For Qt apps (Telegram, for example)
   export QT_AUTO_SCREEN_SET_FACTOR=0
   export QT_SCALE_FACTOR="${scale}"
+
+  # /etc/resolv.conf link remains after working in WSL, so we need to remove it in Deian
+  if [ ! -e "/etc/resolv.conf" ]; then
+    rm /etc/resolv.conf
+  fi
 fi
 
 # For some reason, switching keyboard layout stop working at some point when connected via xrdp.
