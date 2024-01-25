@@ -5,8 +5,23 @@
 # ----------------------------------------
 export EDITOR=vim
 
-# TODO: Maybe find different approach
-if [ "$(whoami)" == "root" ]; then
+export C_TEXT="\033[38;5;02m"
+export C_ERROR="\033[38;5;01m"
+export C_SUCCESS="\033[38;5;02m"
+export C_BORDER_USUAL="\033[38;5;27m"
+export C_BORDER_ROOT="\033[38;5;90m"
+
+# From 1 to 9 - The number of decimals for the command execution time
+export accuracy=2
+# ----------------------------------------
+
+# ----------------------------------------
+# Calculations
+# ----------------------------------------
+export C_RESET
+C_RESET="$(tput sgr0)"
+
+if [ "$(id ---user "${USER}")" = "0" ]; then
   export is_root=1
   export sudo_prefix=""
 else
@@ -15,20 +30,12 @@ else
 fi
 
 # Different color for root
-if [ "${is_root}" -eq 1 ]; then
-  export C_BORDER="\033[38;5;90m"
+if [ "${is_root}" = "1" ]; then
+  export C_BORDER="${C_BORDER_ROOT}"
 else
-  export C_BORDER="\033[38;5;27m"
+  export C_BORDER="${C_BORDER_USUAL}"
 fi
 
-export C_TEXT="\033[38;5;02m"
-export C_RESET
-C_RESET="$(tput sgr0)"
-export C_ERROR="\033[38;5;01m"
-export C_SUCCESS="\033[38;5;02m"
-
-# From 1 to 9 - Количество знаков после запятой для времени выполнения команды
-export accuracy=2
 # We need to calculate this in bash, because in sh (if we go to it) operator "**" does not exist
 export accuracy_tens="$((10 ** accuracy))"
 # ----------------------------------------
@@ -52,7 +59,7 @@ HISTFILESIZE=2000
 shopt -s checkwinsize
 # ----------------------------------------
 
-# For some reason, "sh" does not recognize "-e" option, so we do not use it
+# For some reason, "echo" in "sh" does not recognize "-e" option, so we do not use it
 my_echo_en() {
   local shell
   shell="$(/bin/ps -p $$ -o 'comm=')"
@@ -67,7 +74,7 @@ my_echo_en() {
 export my_echo_en_script
 my_echo_en_script="$(typeset -f my_echo_en)"
 
-# Не отображаем информацию о выполнении прошлой команды для самого первого вывода в сессии
+# We do not display information about the execution of the last command for the very first output in the session
 export is_first_command=-1
 alias clear="is_first_command=-1; clear"
 alias reset="is_first_command=-1; reset"
@@ -96,7 +103,7 @@ get_seconds_parts() {
 export get_seconds_parts_script
 get_seconds_parts_script="$(typeset -f get_seconds_parts)"
 
-# Выполняется сразу после запуска команды
+# Executed immediately after running the command
 function_to_execute_before_command() {
   if [ "${is_command_executing}" = "0" ]; then
     is_command_executing=1
@@ -106,10 +113,10 @@ function_to_execute_before_command() {
 # Because "sh" can't export functions, we use variables
 export function_to_execute_before_command_script
 function_to_execute_before_command_script="$(typeset -f function_to_execute_before_command)"
-# Workds only for "bash", so we ignore this functional later
+# Works only for "bash", so we ignore this functional later
 trap function_to_execute_before_command DEBUG
 
-# Выполняется перед выводом PS1
+# Executed before the PS1 output
 function_to_execute_after_command() {
   if [ "${is_first_command}" = "-1" ]; then
     is_first_command=1
