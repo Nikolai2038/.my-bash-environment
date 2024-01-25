@@ -7,24 +7,25 @@ export EDITOR=vim
 
 # TODO: Maybe find different approach
 if [ "$(whoami)" == "root" ]; then
-  is_root=1
-  sudo_prefix=""
+  export is_root=1
+  export sudo_prefix=""
 else
-  is_root=0
-  sudo_prefix="sudo "
+  export is_root=0
+  export sudo_prefix="sudo "
 fi
 
 # Different color for root
 if [ "${is_root}" -eq 1 ]; then
-  C_BORDER="\033[38;5;90m"
+  export C_BORDER="\033[38;5;90m"
 else
-  C_BORDER="\033[38;5;27m"
+  export C_BORDER="\033[38;5;27m"
 fi
 
-C_TEXT="\033[38;5;02m"
+export C_TEXT="\033[38;5;02m"
+export C_RESET
 C_RESET="$(tput sgr0)"
-C_ERROR="\033[38;5;01m"
-C_SUCCESS="\033[38;5;02m"
+export C_ERROR="\033[38;5;01m"
+export C_SUCCESS="\033[38;5;02m"
 
 # From 1 to 9 - Количество знаков после запятой для времени выполнения команды
 export accuracy=2
@@ -51,12 +52,27 @@ HISTFILESIZE=2000
 shopt -s checkwinsize
 # ----------------------------------------
 
+# For some reason, "sh" does not recognize "-e" option, so we do not use it
+my_echo_en() {
+  local shell
+  shell="$(/bin/ps -p $$ -o 'comm=')"
+
+  if [ "${shell}" = "sh" ]; then
+    echo -n "$@"
+  else
+    echo -en "$@"
+  fi
+}
+# Because "sh" can't export functions, we use variables
+export my_echo_en_script
+my_echo_en_script="$(typeset -f my_echo_en)"
+
 # Не отображаем информацию о выполнении прошлой команды для самого первого вывода в сессии
-is_first_command=-1
+export is_first_command=-1
 alias clear="is_first_command=-1; clear"
 alias reset="is_first_command=-1; reset"
 
-is_command_executing=0
+export is_command_executing=0
 
 get_seconds_parts() {
   local seconds
@@ -76,108 +92,126 @@ get_seconds_parts() {
 
   return 0
 }
-
-get_seconds_parts_script="$(typeset -f get_seconds_parts)"
+# Because "sh" can't export functions, we use variables
 export get_seconds_parts_script
+get_seconds_parts_script="$(typeset -f get_seconds_parts)"
 
 # Выполняется сразу после запуска команды
-trap '
-    if [ "${is_command_executing}" = "0" ]; then
-        is_command_executing=1;
-        timestamp_start_seconds_parts="$(get_seconds_parts)";
-    fi
-' DEBUG
+function_to_execute_before_command() {
+  if [ "${is_command_executing}" = "0" ]; then
+    is_command_executing=1
+    timestamp_start_seconds_parts="$(get_seconds_parts)"
+  fi
+}
+# Workds only for "bash", so we ignore this functional later
+trap function_to_execute_before_command DEBUG
 
 # Выполняется перед выводом PS1
-export PROMPT_COMMAND='
-    if [ "${is_first_command}" = "-1" ]; then
-        is_first_command=1;
-    else
-        is_first_command=0;
-    fi;
-    is_command_executing=0;
-'
+function_to_execute_after_command() {
+  if [ "${is_first_command}" = "-1" ]; then
+    is_first_command=1
+  else
+    is_first_command=0
+  fi
+  is_command_executing=0
+}
+export PROMPT_COMMAND=function_to_execute_after_command
 
-# shellcheck disable=SC2154
-export PS1="\$(
-    command_result=\$?;
+ps1_function() {
+  local command_result=$?
 
-    if [ \"\${command_result}\" -eq 0 ]; then
-        error_code_color='${C_SUCCESS}';
-    else
-        error_code_color='${C_ERROR}';
-    fi;
+  local error_code_color="${C_ERROR}"
+  if [ "${command_result}" -eq 0 ]; then
+    error_code_color="${C_SUCCESS}"
+  fi
 
-    shell=\"\$(/bin/ps -p \$\$ -o 'comm=')\"
+  local shell
+  shell="$(/bin/ps -p $$ -o 'comm=')"
 
-    # If is first command in session
-    if [ \"\${is_first_command}\" = \"1\" ]; then
-        echo -n \"${C_BORDER}  ${C_RESET}\";
-    else
-        echo -n \"${C_BORDER}└─${C_RESET}\";
+  # If is first command in session
+  if [ "${is_first_command}" = "1" ]; then
+    my_echo_en "${C_BORDER}  ${C_RESET}"
+  else
+    my_echo_en "${C_BORDER}└─${C_RESET}"
 
-        # Because \"trap DEBUG\" works only in Bash, we can't calculate time in other shells
-        if [ \"\${shell}\" = \"bash\" ]; then
-          timestamp_end_seconds_parts=\"\$(eval \"\${get_seconds_parts_script}\"; get_seconds_parts)\"
-          if [ -z \"\${timestamp_start_seconds_parts}\" ]; then
-            timestamp_start_seconds_parts=\"\${timestamp_end_seconds_parts}\"
-          fi
-          seconds_parts=\"\$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))\"
-
-          seconds=\"\$((seconds_parts / ${accuracy_tens}))\"
-          milliseconds=\"\$((seconds_parts -  seconds * ${accuracy_tens}))\"
-
-          time_to_print=\"\${seconds}.\$(printf '%0${accuracy}d' \"\${milliseconds#0}\")\"
-
-          echo -n \"${C_BORDER}[\${time_to_print}]─${C_RESET}\";
-        fi
-
-        echo -n \"${C_BORDER}[\${error_code_color}\$(printf '%03d' \${command_result#0})${C_BORDER}]─${C_RESET}\";
-    fi;
-
-    # We use env instead of \"\\\"-variables because they do not exist in \"sh\"
-    # \${PWD} = \w
-    # \${USER} = \u
-    # \$(hostname) = \h
-    echo -n \"${C_BORDER}[\${USER}@\$(hostname):${C_TEXT}\${PWD}${C_BORDER}]${C_RESET}\";
-
-    if [ -d .git ]; then
-      git_branch_name=\"\$(git branch 2> /dev/null | cut -d ' ' -f 2)\" || git_branch_name=\"\"
-
-      if [ -n \"\${git_branch_name}\" ]; then
-          echo -n \"${C_BORDER}─${C_BORDER}[${C_TEXT}\${git_branch_name}${C_BORDER}]${C_RESET}\";
-      elif git status &> /dev/null; then
-          # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
-          echo -n \"${C_BORDER}─${C_BORDER}[${C_ERROR}???${C_BORDER}]${C_RESET}\";
+    # Because \"trap DEBUG\" works only in Bash, we can't calculate time in other shells
+    if [ "${shell}" = "bash" ]; then
+      local timestamp_end_seconds_parts
+      timestamp_end_seconds_parts="$(get_seconds_parts)"
+      if [ -z "${timestamp_start_seconds_parts}" ]; then
+        timestamp_start_seconds_parts="${timestamp_end_seconds_parts}"
       fi
+      local seconds_parts
+      seconds_parts="$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))"
+
+      local seconds="$((seconds_parts / accuracy_tens))"
+      local milliseconds="$((seconds_parts - seconds * accuracy_tens))"
+
+      local time_to_print
+      time_to_print="${seconds}.$(printf "%0${accuracy}d" "${milliseconds#0}")"
+
+      my_echo_en "${C_BORDER}[${time_to_print}]─${C_RESET}"
     fi
 
-    # Extra new line between commands
-    echo '';
+    my_echo_en "${C_BORDER}[${error_code_color}$(printf '%03d' ${command_result#0})${C_BORDER}]─${C_RESET}"
+  fi
 
-    echo '';
-    echo -n \"${C_BORDER}┌─${C_RESET}\";
-    echo -n \"${C_BORDER}[\${shell}]${C_RESET}\";
+  # We use env instead of "\"-variables because they do not exist in "sh"
+  # ${PWD} = \w
+  # ${USER} = \u
+  # $(hostname) = \h
+  my_echo_en "${C_BORDER}[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}"
 
-    echo -n \"${C_BORDER}─${C_RESET}\";
-    # Different symbol for root
-    if [ \"${is_root}\" -eq 1 ]; then
-        echo -n \"${C_BORDER}# ${C_RESET}\";
-    else
-        echo -n \"${C_BORDER}\$ ${C_RESET}\";
+  if [ -d .git ]; then
+    local git_branch_name
+    git_branch_name="$(git branch 2> /dev/null | cut -d ' ' -f 2)" || git_branch_name=""
+
+    if [ -n "${git_branch_name}" ]; then
+      my_echo_en "${C_BORDER}─${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]${C_RESET}"
+    elif git status &> /dev/null; then
+      # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
+      my_echo_en "${C_BORDER}─${C_BORDER}[${C_ERROR}???${C_BORDER}]${C_RESET}"
     fi
-)"
-export PS2="\$(
-    command_result=\$?;
+  fi
 
-    if [ \"\${command_result}\" -eq 0 ]; then
-        error_code_color='${C_SUCCESS}';
-    else
-        error_code_color='${C_ERROR}';
-    fi;
+  # Extra new line between commands
+  echo ''
 
-    echo -n \"${C_BORDER}├─${C_BORDER}> ${C_RESET}\";
-)"
+  echo ''
+  my_echo_en "${C_BORDER}┌─${C_RESET}"
+  my_echo_en "${C_BORDER}[${shell}]${C_RESET}"
+
+  my_echo_en "${C_BORDER}─${C_RESET}"
+  # Different symbol for root
+  if [ "${is_root}" -eq 1 ]; then
+    my_echo_en "${C_BORDER}# ${C_RESET}"
+  else
+    my_echo_en "${C_BORDER}\$ ${C_RESET}"
+  fi
+}
+# Because "sh" can't export functions, we use variables
+export ps1_function_script
+ps1_function_script="$(typeset -f ps1_function)"
+
+export PS1="\$(${my_echo_en_script}; ${get_seconds_parts_script}; ${ps1_function_script}; ps1_function)"
+
+ps2_function() {
+  local command_result=$?
+
+  local error_code_color
+  if [ "${command_result}" -eq 0 ]; then
+    error_code_color="${C_SUCCESS}"
+  else
+    error_code_color="${C_ERROR}"
+  fi
+
+  my_echo_en "${C_BORDER}├─${C_BORDER}> ${C_RESET}"
+}
+# Because "sh" can't export functions, we use variables
+export ps2_function_script
+ps2_function_script="$(typeset -f ps2_function)"
+
+export PS2="\$(${my_echo_en_script}; ${get_seconds_parts_script}; ${ps2_function_script}; ps2_function)"
 
 # To use aliases in sudo too
 alias sudo="sudo "
@@ -190,6 +224,7 @@ unalias ll &> /dev/null
 ll() {
   # We use "sed" to remove "total".
   # For "total" we check only beginning of the line because of units after number.
+  # shellcheck disable=SC2012
   ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
   return 0
 }
@@ -199,13 +234,14 @@ lls() {
   # We don't use "-1" from "ls" because it does not show us where links are pointing.
   # Instead, we use "cut".
   # We use "tr" to remove duplicate spaces - for "cut" to work properly.
-  ll "${@}" | tr -s [:blank:] | cut -d ' ' -f 8- || return "$?"
+  ll "${@}" | tr -s '[:blank:]' | cut -d ' ' -f 8- || return "$?"
   return 0
 }
 alias llsa="lls --almost-all"
 # Aliases to print list in Markdown format
 unalias llsl &> /dev/null
 llsl() {
+  # shellcheck disable=2016
   lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
   return 0
 }
@@ -262,7 +298,7 @@ sed_escape() {
   return 0
 }
 
-my_prefix="  "
+export my_prefix="  "
 
 echo "${my_prefix}Nikolai's .my-bash-environment v.1.0" >&2
 
@@ -308,10 +344,10 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
     # Update this file itself (will be applied in next session)
     # TODO: Make external updater to update this script in this session
     if {
-      temp_dir="$(mktemp --directory)" && \
-      git clone 'https://github.com/Nikolai2038/.my-bash-environment.git' "${temp_dir}" && \
-      rm -rf "${temp_dir}/.git" && \
-      mv "${temp_dir}" "${using_dir_path}"
+      temp_dir="$(mktemp --directory)" &&
+        git clone 'https://github.com/Nikolai2038/.my-bash-environment.git' "${temp_dir}" &&
+        rm -rf "${temp_dir}/.git" &&
+        mv "${temp_dir}" "${using_dir_path}"
     }; then
       echo "\"${using_script_path}\" successfully updated!" >&2
     else
