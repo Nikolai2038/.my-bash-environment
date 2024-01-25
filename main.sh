@@ -202,17 +202,17 @@ ps1_function() {
   tree_as_string="$(pstree -aps $$ | head -n -5 | tr -d '[:blank:]')"
   local line
   for line in ${tree_as_string}; do
-      local name
-      name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
+    local name
+    name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
 
-      # We will find first process, which ends with "sh" - we assume it is our first shell
-      if echo "${name}" | grep -e "^.*sh\$" > /dev/null; then
-          was_sh=1
-      fi
+    # We will find first process, which ends with "sh" - we assume it is our first shell
+    if echo "${name}" | grep -e '^.*sh$' > /dev/null; then
+      was_sh=1
+    fi
 
-      if [ "${was_sh}" = "1" ]; then
-          my_echo_en "${C_BORDER}─[${name}]${C_RESET}"
-      fi
+    if [ "${was_sh}" = "1" ]; then
+      my_echo_en "${C_BORDER}─[${name}]${C_RESET}"
+    fi
   done
   # ----------------------------------------
 
@@ -344,7 +344,7 @@ echo "${my_prefix}Nikolai's .my-bash-environment v.1.0" >&2
 was_autoupdate_failed=0
 was_installation_failed=0
 
-script_url="https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh"
+repository_url="https://github.com/Nikolai2038/.my-bash-environment.git"
 bashrc_file="${HOME}/.bashrc"
 postfix=" # n2038 .my-bash-environment"
 postfix_escaped="$(sed_escape "${postfix}")"
@@ -373,16 +373,16 @@ fi
 
 if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
   # We check script directory - if it has GIT, we assume, it is development, and we will not update file to not override local changes
-  if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
-    echo "Updating \"${using_script_path}\" from \"${script_url}\"..." >&2
+  if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep "${repository_url}"; } &> /dev/null; then
+    echo "Updating \"${using_script_path}\" from \"${repository_url}\"..." >&2
 
     # Update this file itself (will be applied in next session)
     # TODO: Make external updater to update this script in this session
     if {
       temp_dir="$(mktemp --directory)" &&
-        git clone 'https://github.com/Nikolai2038/.my-bash-environment.git' "${temp_dir}" &&
+        git clone "${repository_url}" "${temp_dir}" &&
         rm -rf "${temp_dir}/.git" &&
-        mv "${temp_dir}" "${using_dir_path}"
+        mv --force "${temp_dir}" "${using_dir_path}"
     }; then
       echo "\"${using_script_path}\" successfully updated!" >&2
     else
