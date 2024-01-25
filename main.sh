@@ -233,30 +233,74 @@ function gacp() {
   return 0
 }
 
+function sed_escape() {
+  echo "$@" | sed -e 's/[]\/$*.^|()[]/\\&/g' || return "$?"
+  return 0
+}
+
 # ========================================
 # Autoupdate
 # ========================================
+# We save errors status so we can print them after "clear"
 was_autoupdate_failed=0
+was_installation_failed=0
+
+script_url="https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh"
+script_path="${HOME}/.my-bash-environment/main.sh"
+bashrc_file="/etc/bash.bashrc"
+postfix=" # n2038 .my-bash-environment"
+postfix_escaped="$(sed_escape "${postfix}")"
+
+this_script_path="$(realpath "${BASH_SOURCE[0]}")"
+
+using_script_path="$(sed -En "s/^source[[:blank:]]+\"?([^[:blank:]\"]+?)\"?[[:blank:]]*?${postfix_escaped}\$/\\1/p" "${bashrc_file}")"
+echo "using_script_path: \"${using_script_path}\"" >&2
+
 if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
-  # If not development
-  if ! { git -C "${HOME}/.my-bash-environment" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
-    mkdir --parents "${HOME}/.my-bash-environment"
-    new_file_content="$(curl --silent https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh)" || was_autoupdate_failed=1
-    if [ "${was_autoupdate_failed}" = "0" ] && [ -n "${new_file_content}" ]; then
-      echo "${new_file_content}" > "${HOME}/.my-bash-environment/main.sh" || was_autoupdate_failed=1
+  # If script is not installed
+  if [ -z "${using_script_path}" ]; then
+    # This script will be the one to be used
+    using_script_path="${this_script_path}"
+    
+    # Install it
+    echo "Need sudo to update \"${bashrc_file}\"..." >&2
+    if { echo "source \"${using_script_path}\" ${postfix}" | sudo tee --append "${bashrc_file}"; } > /dev/null; then
+      echo "\"${bashrc_file}\" successfully updated!" >&2
+    else
+      was_installation_failed=1
     fi
   fi
-  # shellcheck disable=2016
-  if ! grep '^source "${HOME}/.my-bash-environment/main.sh"$' "${HOME}/.bashrc" &> /dev/null; then
-    echo 'source "${HOME}/.my-bash-environment/main.sh"' >> ~/.bashrc
+  
+  using_dir_path=""
+  if [ -n "${using_script_path}" ]; then
+    using_dir_path="$(dirname "${using_script_path}")"
   fi
+  
+  # We check script directory - if it has GIT, we assume, it is development, and we will not update file to not override local changes
+  if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
+    echo "Updating \"${using_script_path}\" from \"${script_url}\"..." >&2
+    # Update this file itself (will be applied in next session)
+    # TODO: Make external updater to update this script in this session
+    new_file_content="$(curl --silent "${script_url}")" || was_autoupdate_failed=1
+    if [ "${was_autoupdate_failed}" = "0" ] && [ -n "${new_file_content}" ]; then
+      echo "${new_file_content}" > "${using_script_path}" || was_autoupdate_failed=1
+      echo "\"${using_script_path}\" successfully updated!" >&2
+    fi
+  fi
+else
+  echo "Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
 fi
 # ========================================
 
-clear
+echo ".my-bash-environment v. 1.0"
+# clear
+
+if [ "${was_installation_failed}" = "1" ]; then
+  echo "Failed to install \"${script_path}\" in \"${bashrc_file}\"." >&2
+fi
 
 if [ "${was_autoupdate_failed}" = "1" ]; then
-  echo "Failed to update ~/.my-bash-environment/main.sh - autoupdate skipped." >&2
+  echo "Failed to update \"${script_path}\" - autoupdate skipped." >&2
 fi
 
 # This must be last command in this file
