@@ -103,6 +103,9 @@ function_to_execute_before_command() {
     timestamp_start_seconds_parts="$(get_seconds_parts)"
   fi
 }
+# Because "sh" can't export functions, we use variables
+export function_to_execute_before_command_script
+function_to_execute_before_command_script="$(typeset -f function_to_execute_before_command)"
 # Workds only for "bash", so we ignore this functional later
 trap function_to_execute_before_command DEBUG
 
@@ -115,7 +118,8 @@ function_to_execute_after_command() {
   fi
   is_command_executing=0
 }
-export PROMPT_COMMAND=function_to_execute_after_command
+# PROMPT_COMMAND is available only in "bash"
+export PROMPT_COMMAND="function_to_execute_after_command"
 
 ps1_function() {
   local command_result=$?
@@ -129,7 +133,8 @@ ps1_function() {
   shell="$(/bin/ps -p $$ -o 'comm=')"
 
   # If is first command in session
-  if [ "${is_first_command}" = "1" ]; then
+  # Because we can't catch this behaviour in "sh", we don't check it there
+  if [ "${is_first_command}" = "1" ] && [ "${shell}" != "sh" ]; then
     my_echo_en "${C_BORDER}  ${C_RESET}"
   else
     my_echo_en "${C_BORDER}└─${C_RESET}"
@@ -178,8 +183,31 @@ ps1_function() {
   echo ''
 
   echo ''
-  my_echo_en "${C_BORDER}┌─${C_RESET}"
-  my_echo_en "${C_BORDER}[${shell}]${C_RESET}"
+  my_echo_en "${C_BORDER}┌${C_RESET}"
+
+  # ----------------------------------------
+  # Print shell tree in line
+  # ----------------------------------------
+  local was_sh=0
+  # Remove last 5 processes: 2 parents shells, subshell, "pstree" and "head".
+  # Also remove spaces, so we can iterate over processes
+  local tree_as_string
+  tree_as_string="$(pstree -aps $$ | head -n -5 | tr -d '[:blank:]')"
+  local line
+  for line in ${tree_as_string}; do
+      local name
+      name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
+
+      # We will find first process, which ends with "sh" - we assume it is our first shell
+      if echo "${name}" | grep -e "^.*sh\$" > /dev/null; then
+          was_sh=1
+      fi
+
+      if [ "${was_sh}" = "1" ]; then
+          my_echo_en "${C_BORDER}─[${name}]${C_RESET}"
+      fi
+  done
+  # ----------------------------------------
 
   my_echo_en "${C_BORDER}─${C_RESET}"
   # Different symbol for root
