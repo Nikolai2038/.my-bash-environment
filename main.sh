@@ -16,18 +16,20 @@ fi
 
 # Different color for root
 if [ "${is_root}" -eq 1 ]; then
-  C_BORDER="\[\033[38;5;90m\]"
+  C_BORDER="\033[38;5;90m"
 else
-  C_BORDER="\[\033[38;5;27m\]"
+  C_BORDER="\033[38;5;27m"
 fi
 
-C_TEXT="\[\033[38;5;02m\]"
-C_RESET="\[$(tput sgr0)\]"
-C_ERROR="\[\033[38;5;01m\]"
-C_SUCCESS="\[\033[38;5;02m\]"
+C_TEXT="\033[38;5;02m"
+C_RESET="$(tput sgr0)"
+C_ERROR="\033[38;5;01m"
+C_SUCCESS="\033[38;5;02m"
 
 # From 1 to 9 - Количество знаков после запятой для времени выполнения команды
-accuracy=2
+export accuracy=2
+# We need to calculate this in bash, because in sh (if we go to it) operator "**" does not exist
+export accuracy_tens="$((10 ** accuracy))"
 # ----------------------------------------
 
 # ----------------------------------------
@@ -56,23 +58,27 @@ alias reset="is_first_command=-1; reset"
 
 is_command_executing=0
 
-function get_seconds_parts() {
+get_seconds_parts() {
   local seconds
   seconds="$(date +%s)" || return "$?"
 
   local extra_second_parts
   extra_second_parts="$(date +%N)" || return "$?"
 
-  # Remove zeros (to avoid "printf: invalid octal number" error) with sed (because it does not always work with "${extra_second_parts#0}")
-  extra_second_parts="$(echo "${extra_second_parts}" | sed -En 's/^[0]*([0-9]+?)$/\1/p')" || return "$?"
+  # Remove leading zeros (to avoid "printf: invalid octal number" error)
+  extra_second_parts="${extra_second_parts#"${extra_second_parts%%[!0]*}"}"
 
   extra_second_parts="$(printf '%09d' "${extra_second_parts}")" || return "$?"
-  extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
+  #extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
+  extra_second_parts="$(echo "${extra_second_parts}" | sed -En "s/^(.{${accuracy}}).*\$/\1/p")"
 
   echo "${seconds}${extra_second_parts}"
 
   return 0
 }
+
+get_seconds_parts_script="$(typeset -f get_seconds_parts)"
+export get_seconds_parts_script
 
 # Выполняется сразу после запуска команды
 trap '
@@ -102,32 +108,48 @@ export PS1="\$(
         error_code_color='${C_ERROR}';
     fi;
 
+    shell=\"\$(/bin/ps -p \$\$ -o 'comm=')\"
+
     # If is first command in session
-    if [ \"\${is_first_command}\" == \"1\" ]; then
+    if [ \"\${is_first_command}\" = \"1\" ]; then
         echo -n \"${C_BORDER}  ${C_RESET}\";
     else
-        timestamp_end_seconds_parts=\"\$(get_seconds_parts)\"
-        seconds_parts=\"\$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))\"
-
-        seconds=\"\$((seconds_parts / (10 ** ${accuracy})))\"
-        milliseconds=\"\$((seconds_parts -  seconds * (10 ** ${accuracy})))\"
-
-        time_to_print=\"\${seconds}.\$(printf '%0${accuracy}d' \"\${milliseconds#0}\")\"
-
         echo -n \"${C_BORDER}└─${C_RESET}\";
-        echo -n \"${C_BORDER}[\${time_to_print}${C_BORDER}]${C_RESET}\";
-        echo -n \"${C_BORDER}─[\${error_code_color}\$(printf '%03d' \${command_result#0})${C_BORDER}]─${C_RESET}\";
+
+        # Because \"trap DEBUG\" works only in Bash, we can't calculate time in other shells
+        if [ \"\${shell}\" = \"bash\" ]; then
+          timestamp_end_seconds_parts=\"\$(eval \"\${get_seconds_parts_script}\"; get_seconds_parts)\"
+          if [ -z \"\${timestamp_start_seconds_parts}\" ]; then
+            timestamp_start_seconds_parts=\"\${timestamp_end_seconds_parts}\"
+          fi
+          seconds_parts=\"\$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))\"
+
+          seconds=\"\$((seconds_parts / ${accuracy_tens}))\"
+          milliseconds=\"\$((seconds_parts -  seconds * ${accuracy_tens}))\"
+
+          time_to_print=\"\${seconds}.\$(printf '%0${accuracy}d' \"\${milliseconds#0}\")\"
+
+          echo -n \"${C_BORDER}[\${time_to_print}]─${C_RESET}\";
+        fi
+
+        echo -n \"${C_BORDER}[\${error_code_color}\$(printf '%03d' \${command_result#0})${C_BORDER}]─${C_RESET}\";
     fi;
 
-    echo -n \"${C_BORDER}[\u@\h:${C_TEXT}\w${C_BORDER}]${C_RESET}\";
+    # We use env instead of \"\\\"-variables because they do not exist in \"sh\"
+    # \${PWD} = \w
+    # \${USER} = \u
+    # \$(hostname) = \h
+    echo -n \"${C_BORDER}[\${USER}@\$(hostname):${C_TEXT}\${PWD}${C_BORDER}]${C_RESET}\";
 
-    git_branch_name=\"\$(git branch 2> /dev/null | cut -d ' ' -f 2)\" || git_branch_name=\"\"
+    if [ -d .git ]; then
+      git_branch_name=\"\$(git branch 2> /dev/null | cut -d ' ' -f 2)\" || git_branch_name=\"\"
 
-    if [ -n \"\${git_branch_name}\" ]; then
-        echo -n \"${C_BORDER}─${C_BORDER}[${C_TEXT}\${git_branch_name}${C_BORDER}]${C_RESET}\";
-    elif git status &> /dev/null; then
-        # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
-        echo -n \"${C_BORDER}─${C_BORDER}[${C_ERROR}???${C_BORDER}]${C_RESET}\";
+      if [ -n \"\${git_branch_name}\" ]; then
+          echo -n \"${C_BORDER}─${C_BORDER}[${C_TEXT}\${git_branch_name}${C_BORDER}]${C_RESET}\";
+      elif git status &> /dev/null; then
+          # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
+          echo -n \"${C_BORDER}─${C_BORDER}[${C_ERROR}???${C_BORDER}]${C_RESET}\";
+      fi
     fi
 
     # Extra new line between commands
@@ -135,7 +157,9 @@ export PS1="\$(
 
     echo '';
     echo -n \"${C_BORDER}┌─${C_RESET}\";
+    echo -n \"${C_BORDER}[\${shell}]${C_RESET}\";
 
+    echo -n \"${C_BORDER}─${C_RESET}\";
     # Different symbol for root
     if [ \"${is_root}\" -eq 1 ]; then
         echo -n \"${C_BORDER}# ${C_RESET}\";
@@ -163,7 +187,7 @@ alias sudo="sudo "
 
 # ls aliases.
 unalias ll &> /dev/null
-function ll() {
+ll() {
   # We use "sed" to remove "total".
   # For "total" we check only beginning of the line because of units after number.
   ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
@@ -171,7 +195,7 @@ function ll() {
 }
 alias lla="ll  --almost-all"
 unalias lls &> /dev/null
-function lls() {
+lls() {
   # We don't use "-1" from "ls" because it does not show us where links are pointing.
   # Instead, we use "cut".
   # We use "tr" to remove duplicate spaces - for "cut" to work properly.
@@ -181,7 +205,7 @@ function lls() {
 alias llsa="lls --almost-all"
 # Aliases to print list in Markdown format
 unalias llsl &> /dev/null
-function llsl() {
+llsl() {
   lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
   return 0
 }
@@ -190,7 +214,7 @@ alias llsla="llsal"
 
 # Use as alias but without space
 unalias examples &> /dev/null
-function examples() {
+examples() {
   less -R <<< "$(curl "https://cheat.sh/${*}")" || return "$?"
   return 0
 }
@@ -201,7 +225,7 @@ alias apt="apt-get"
 # shellcheck disable=2139
 alias au="${sudo_prefix}apt-get update && ${sudo_prefix}apt-get dist-upgrade -y && ${sudo_prefix}apt-get autoremove -y"
 unalias ai &> /dev/null
-function ai() {
+ai() {
   # shellcheck disable=2086
   ${sudo_prefix}apt-get update || return "$?"
   # shellcheck disable=2086
@@ -211,7 +235,7 @@ function ai() {
   return 0
 }
 unalias ar &> /dev/null
-function ar() {
+ar() {
   # shellcheck disable=2086
   ${sudo_prefix}apt-get remove -y "$@" || return "$?"
   # shellcheck disable=2086
@@ -227,13 +251,13 @@ alias gc="git commit -m"
 alias gac="ga && gc"
 alias gp="git push"
 unalias gacp &> /dev/null
-function gacp() {
+gacp() {
   gac "${@}" || return "$?"
   gp || return "$?"
   return 0
 }
 
-function sed_escape() {
+sed_escape() {
   echo "$@" | sed -e 's/[]\/$*.^|()[]/\\&/g' || return "$?"
   return 0
 }
@@ -280,12 +304,18 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
   # We check script directory - if it has GIT, we assume, it is development, and we will not update file to not override local changes
   if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
     echo "Updating \"${using_script_path}\" from \"${script_url}\"..." >&2
+
     # Update this file itself (will be applied in next session)
     # TODO: Make external updater to update this script in this session
-    new_file_content="$(curl --silent "${script_url}")" || was_autoupdate_failed=1
-    if [ "${was_autoupdate_failed}" = "0" ] && [ -n "${new_file_content}" ]; then
-      echo "${new_file_content}" > "${using_script_path}" || was_autoupdate_failed=1
+    if {
+      temp_dir="$(mktemp --directory)" && \
+      git clone 'https://github.com/Nikolai2038/.my-bash-environment.git' "${temp_dir}" && \
+      rm -rf "${temp_dir}/.git" && \
+      mv "${temp_dir}" "${using_dir_path}"
+    }; then
       echo "\"${using_script_path}\" successfully updated!" >&2
+    else
+      was_autoupdate_failed=1
     fi
   fi
 else
@@ -296,8 +326,7 @@ fi
 echo "${my_prefix}Welcome!" >&2
 echo "" >&2
 
-# DEBUG: Commented for now
-# clear
+clear
 
 if [ "${was_installation_failed}" = "1" ]; then
   echo "${my_prefix}Failed to install \"${using_script_path}\" in \"${bashrc_file}\"." >&2
