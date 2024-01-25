@@ -14,12 +14,6 @@ else
   sudo_prefix="sudo "
 fi
 
-if [ -d "/mnt/wsl-original" ]; then
-  is_wsl=1
-else
-  is_wsl=0
-fi
-
 # Different color for root
 if [ "${is_root}" -eq 1 ]; then
   C_BORDER="\[\033[38;5;90m\]"
@@ -239,15 +233,6 @@ function gacp() {
   return 0
 }
 
-# Auto-color for "less"
-if ! source-highlight --version &> /dev/null; then
-  # shellcheck disable=2086
-  ${sudo_prefix}apt-get install -y source-highlight
-fi
-lesspipe_script="$(find /usr -name 'src-hilite-lesspipe.sh' -type f 2> /dev/null | head -n 1)"
-export LESSOPEN="| ${lesspipe_script} %s"
-export LESS=' -R '
-
 # ========================================
 # Autoupdate
 # ========================================
@@ -267,58 +252,6 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
   fi
 fi
 # ========================================
-
-# TODO: Maybe find different approach
-if [ "${DISPLAY}" = ":10.0" ]; then
-  is_xrdp=1
-else
-  is_xrdp=0
-fi
-
-# Apply on WSL
-if [ "${is_wsl}" = "1" ]; then
-  # Make sure we run this command only one time in user session
-  # Is dbus-daemon is launched in the session, this command will print processes
-  if ! busctl list --user > /dev/null; then
-    # Fix warnings in graphic apps
-    dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
-  fi
-
-  # Fix locale
-  . /etc/default/locale
-# Apply only on laptop with non root user
-elif [ "${is_root}" = "0" ] && [ "$(hostname)" = "NIKOLAI-LAPTOP" ]; then
-  # Check, if connected via xrdp - do not use scaling
-  if [ "${is_xrdp}" = "1" ]; then
-    scale="1.0"
-  # If not connected via xrdp and not ssh - use scaling
-  elif [ -n "${DISPLAY}" ]; then
-    scale="1.5"
-  fi
-
-  gsettings set org.gnome.desktop.interface text-scaling-factor "${scale}"
-
-  # For Qt apps (Telegram, for example)
-  export QT_AUTO_SCREEN_SET_FACTOR=0
-  export QT_SCALE_FACTOR="${scale}"
-fi
-
-if ((!is_wsl)); then
-  # /etc/resolv.conf link remains after working in WSL, so we need to remove it in Debian
-  if [ -h "/etc/resolv.conf" ] && [ ! -e "/etc/resolv.conf" ]; then
-    echo "Removing broken symlink..." >&2
-    sudo rm /etc/resolv.conf
-  fi
-fi
-
-# For some reason, switching keyboard layout stop working at some point when connected via xrdp.
-# But if we change GNOME Tweaks settings, it will be fixed.
-# So here we change keyboard setting to empty value and then restore it.
-if [ "${is_xrdp}" = "1" ]; then
-  options="$(gsettings get org.gnome.desktop.input-sources xkb-options)"
-  gsettings set org.gnome.desktop.input-sources xkb-options "[]"
-  gsettings set org.gnome.desktop.input-sources xkb-options "${options}"
-fi
 
 clear
 
