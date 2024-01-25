@@ -76,7 +76,7 @@ function get_seconds_parts() {
 
 # Выполняется сразу после запуска команды
 trap '
-    if [ "${is_command_executing}" == "0" ]; then
+    if [ "${is_command_executing}" = "0" ]; then
         is_command_executing=1;
         timestamp_start_seconds_parts="$(get_seconds_parts)";
     fi
@@ -84,7 +84,7 @@ trap '
 
 # Выполняется перед выводом PS1
 export PROMPT_COMMAND='
-    if [ "${is_first_command}" == "-1" ]; then
+    if [ "${is_first_command}" = "-1" ]; then
         is_first_command=1;
     else
         is_first_command=0;
@@ -238,6 +238,10 @@ function sed_escape() {
   return 0
 }
 
+my_prefix="  "
+
+echo "${my_prefix}Nikolai's .my-bash-environment v.1.0" >&2
+
 # ========================================
 # Autoupdate
 # ========================================
@@ -246,36 +250,33 @@ was_autoupdate_failed=0
 was_installation_failed=0
 
 script_url="https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh"
-script_path="${HOME}/.my-bash-environment/main.sh"
-bashrc_file="/etc/bash.bashrc"
+bashrc_file="${HOME}/.bashrc"
 postfix=" # n2038 .my-bash-environment"
 postfix_escaped="$(sed_escape "${postfix}")"
 
 this_script_path="$(realpath "${BASH_SOURCE[0]}")"
 
 using_script_path="$(sed -En "s/^source[[:blank:]]+\"?([^[:blank:]\"]+?)\"?[[:blank:]]*?${postfix_escaped}\$/\\1/p" "${bashrc_file}")"
-echo "using_script_path: \"${using_script_path}\"" >&2
+
+# If script is not installed
+if [ -z "${using_script_path}" ]; then
+  # This script will be the one to be used
+  using_script_path="${this_script_path}"
+
+  # Install it
+  echo "source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
+  echo "\"${bashrc_file}\" successfully updated!" >&2
+fi
+
+echo "${my_prefix}Using bashrc: \"${bashrc_file}\"" >&2
+echo "${my_prefix}Using script path: \"${using_script_path}\"" >&2
+
+using_dir_path=""
+if [ -n "${using_script_path}" ]; then
+  using_dir_path="$(dirname "${using_script_path}")"
+fi
 
 if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
-  # If script is not installed
-  if [ -z "${using_script_path}" ]; then
-    # This script will be the one to be used
-    using_script_path="${this_script_path}"
-    
-    # Install it
-    echo "Need sudo to update \"${bashrc_file}\"..." >&2
-    if { echo "source \"${using_script_path}\" ${postfix}" | sudo tee --append "${bashrc_file}"; } > /dev/null; then
-      echo "\"${bashrc_file}\" successfully updated!" >&2
-    else
-      was_installation_failed=1
-    fi
-  fi
-  
-  using_dir_path=""
-  if [ -n "${using_script_path}" ]; then
-    using_dir_path="$(dirname "${using_script_path}")"
-  fi
-  
   # We check script directory - if it has GIT, we assume, it is development, and we will not update file to not override local changes
   if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep 'https://github.com/Nikolai2038/.my-bash-environment.git'; } &> /dev/null; then
     echo "Updating \"${using_script_path}\" from \"${script_url}\"..." >&2
@@ -288,19 +289,22 @@ if [ -z "${DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
     fi
   fi
 else
-  echo "Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
+  echo "${my_prefix}Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
 fi
 # ========================================
 
-echo ".my-bash-environment v. 1.0"
+echo "${my_prefix}Welcome!" >&2
+echo "" >&2
+
+# DEBUG: Commented for now
 # clear
 
 if [ "${was_installation_failed}" = "1" ]; then
-  echo "Failed to install \"${script_path}\" in \"${bashrc_file}\"." >&2
+  echo "${my_prefix}Failed to install \"${using_script_path}\" in \"${bashrc_file}\"." >&2
 fi
 
 if [ "${was_autoupdate_failed}" = "1" ]; then
-  echo "Failed to update \"${script_path}\" - autoupdate skipped." >&2
+  echo "${my_prefix}Failed to update \"${using_script_path}\" - autoupdate skipped." >&2
 fi
 
 # This must be last command in this file
