@@ -77,7 +77,7 @@ my_echo_en_script="$(typeset -f my_echo_en)"
 is_first_shell() {
   # Number of last processes to ignore
   local level="${1}" && { shift || true; }
-  
+
   local was_sh=0
   # Remove minimum last 5 processes: subshell, function call, subshell, "pstree" and "head".
   # Also remove spaces, so we can iterate over processes
@@ -408,23 +408,59 @@ if [ -n "${using_script_path}" ]; then
   using_dir_path="$(dirname "${using_script_path}")"
 fi
 
+get_directory_hash() {
+  local directory="$1" && { shift || true; }
+
+  if [ ! -d "${directory}" ]; then
+    echo ""
+    return 0
+  fi
+
+  # We check file permissions too
+  find "${@}" -type f | LC_ALL=C sort | xargs -I {} sh -c '{ ls -al {} | cut -d " " -f 1; cat {}; }' | sha256sum || return "$?"
+  return 0
+}
+
+autoupdate() {
+  local temp_dir="$1" && { shift || true; }
+
+  local hash_current
+  hash_current="$(get_directory_hash "${using_dir_path}")" || return "$?"
+
+  # Update this file itself (will be applied in next session)
+  # TODO: Make external updater to update this script in this session
+  git clone "${repository_url}" "${temp_dir}" > /dev/null || return "$?"
+  rm -rf "${temp_dir}/.git" || return "$?"
+
+  local hash_new
+  hash_new="$(get_directory_hash "${temp_dir}")" || return "$?"
+
+  # If there are file changes
+  if [ "${hash_new}" != "${hash_current}" ]; then
+    echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
+    mv --force "${temp_dir}" "${using_dir_path}" || return "$?"
+    echo "\"${using_dir_path}\" successfully updated!" >&2
+  else
+    echo "${my_prefix}No updates available." >&2
+  fi
+
+  return 0
+}
+
 if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
   # We check the script directory - if it has GIT, we assume, it is development, and we will not update the file to not override local changes
   if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep "${repository_url}"; } &> /dev/null; then
-    echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
+    # Create temp dir
+    temp_dir="$(mktemp --directory)" || return "$?"
 
-    # Update this file itself (will be applied in next session)
-    # TODO: Make external updater to update this script in this session
-    if {
-      temp_dir="$(mktemp --directory)" &&
-        git clone "${repository_url}" "${temp_dir}" &&
-        rm -rf "${temp_dir}/.git" &&
-        mv --force "${temp_dir}" "${using_dir_path}"
-    }; then
-      echo "\"${using_script_path}\" successfully updated!" >&2
-    else
-      was_autoupdate_failed=1
+    autoupdate "${temp_dir}" || was_autoupdate_failed=1
+
+    # Clear temp dir
+    if [ -d "${temp_dir}" ]; then
+      rm -rf "${temp_dir}"
     fi
+  else
+    echo "${my_prefix}GIT directory found - autoupdate will not be executed." >&2
   fi
 else
   echo "${my_prefix}Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
