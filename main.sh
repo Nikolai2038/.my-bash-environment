@@ -367,7 +367,7 @@ sed_escape() {
 export my_prefix=""
 
 echo_if_messages() {
-  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-0}" = "0" ]; then
+  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-1}" = "0" ]; then
     echo "${@}"
   fi
 }
@@ -400,8 +400,8 @@ if [ -z "${using_script_path}" ]; then
   # Install it
   echo "
 N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE=0
-N2038_DISABLE_BASH_ENVIRONMENT_CLEAR=0
-N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES=0
+N2038_DISABLE_BASH_ENVIRONMENT_CLEAR=1
+N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES=1
 source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
   echo_if_messages "\"${bashrc_file}\" successfully updated!" >&2
 fi
@@ -451,7 +451,7 @@ autoupdate() {
 
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
-  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-0}" = "0" ]; then
+  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-1}" = "0" ]; then
   git clone "${repository_url}" "${temp_dir}" || return "$?"
   else
   git clone "${repository_url}" "${temp_dir}" &> /dev/null || return "$?"
@@ -499,7 +499,7 @@ fi
 
 echo_if_messages "${my_prefix}Welcome, ${USER}!" >&2
 
-if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-0}" = "0" ]; then
+if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-1}" = "0" ]; then
   # We clear only the first shell
   if [ "$(is_first_shell 5)" = "1" ]; then
     clear
