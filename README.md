@@ -13,7 +13,9 @@ My configs to easily download and use on new machines.
 2. Execute:
 
     ```bash
-    source <(curl https://raw.githubusercontent.com/Nikolai2038/.my-bash-environment/main/main.sh)
+   git clone https://github.com/Nikolai2038/.my-bash-environment.git
+   rm -rf ./.my-bash-environment/.git
+   source ./.my-bash-environment/main.sh
     ```
 
 ## Update
