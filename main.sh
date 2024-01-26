@@ -75,7 +75,7 @@ export my_echo_en_script
 my_echo_en_script="$(typeset -f my_echo_en)"
 
 is_first_shell() {
-  if ! pstree --help &> /dev/null; then
+  if ! pstree --version &> /dev/null; then
     echo 0
     return 0
   fi
@@ -244,7 +244,7 @@ ps1_function() {
   echo ''
   my_echo_en "${C_BORDER}┌${C_RESET}"
 
-  if ! pstree --help &> /dev/null; then
+  if ! pstree --version &> /dev/null; then
     my_echo_en "${C_BORDER}─[${shell}]${C_RESET}"
   else
     # ----------------------------------------
@@ -539,7 +539,7 @@ if [ "${was_autoupdate_failed}" = "1" ]; then
   echo "${my_prefix}Failed to update \"${using_script_path}\" - autoupdate skipped." >&2
 fi
 
-if ! pstree --help &> /dev/null; then
+if ! pstree --version &> /dev/null; then
   echo "Command \"pstree\" not found! It is needed to show shell tree in \"PS1\". Try \"sudo apt-get install -y psmisc\" to install it." >&2
   echo 0
   return 0
