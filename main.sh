@@ -74,6 +74,37 @@ my_echo_en() {
 export my_echo_en_script
 my_echo_en_script="$(typeset -f my_echo_en)"
 
+is_first_shell() {
+  # Number of last processes to ignore
+  local level="${1}" && { shift || true; }
+  
+  local was_sh=0
+  # Remove minimum last 5 processes: subshell, function call, subshell, "pstree" and "head".
+  # Also remove spaces, so we can iterate over processes
+  local tree_as_string
+  tree_as_string="$(pstree -aps $$ | head -n -"${level}" | tr -d '[:blank:]')"
+  local line
+  for line in ${tree_as_string}; do
+    local name
+    name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
+
+    # We will find first process, which ends with "sh" - we assume it is our first shell
+    if echo "${name}" | grep -e '^.*sh$' > /dev/null; then
+      if [ "${was_sh}" = "1" ]; then
+        echo 0
+        return 0
+      fi
+      was_sh=1
+    fi
+  done
+
+  echo 1
+  return 0
+}
+# Because "sh" can't export functions, we use variables
+export is_first_shell_script
+is_first_shell_script="$(typeset -f is_first_shell)"
+
 # We do not display information about the execution of the last command for the very first output in the session
 export is_first_command=-1
 alias clear="is_first_command=-1; clear"
@@ -141,7 +172,7 @@ ps1_function() {
 
   # If is first command in session
   # Because we can't catch this behaviour in "sh", we don't check it there
-  if [ "${is_first_command}" = "1" ] && [ "${shell}" != "sh" ]; then
+  if [ "$(is_first_shell 6)" = "1" ] && [ "${is_first_command}" = "1" ] && [ "${shell}" != "sh" ]; then
     my_echo_en "${C_BORDER}  ${C_RESET}"
   else
     my_echo_en "${C_BORDER}└─${C_RESET}"
@@ -196,7 +227,7 @@ ps1_function() {
   # Print shell tree in line
   # ----------------------------------------
   local was_sh=0
-  # Remove last 5 processes: 2 parents shells, subshell, "pstree" and "head".
+  # Remove last 5 processes: subshell, function call, subshell, "pstree" and "head".
   # Also remove spaces, so we can iterate over processes
   local tree_as_string
   tree_as_string="$(pstree -aps $$ | head -n -5 | tr -d '[:blank:]')"
@@ -228,7 +259,7 @@ ps1_function() {
 export ps1_function_script
 ps1_function_script="$(typeset -f ps1_function)"
 
-export PS1="\$(${my_echo_en_script}; ${get_seconds_parts_script}; ${ps1_function_script}; ps1_function)"
+export PS1="\$(${my_echo_en_script}; ${is_first_shell_script}; ${get_seconds_parts_script}; ${ps1_function_script}; ps1_function)"
 
 ps2_function() {
   local command_result=$?
@@ -252,7 +283,7 @@ export PS2="\$(${my_echo_en_script}; ${get_seconds_parts_script}; ${ps2_function
 alias sudo="sudo "
 
 # We use some functions as aliases.
-# But we must unalias functions names if they exists, because alias have more priority than function.
+# But we must unalias functions names if they exist, because alias have more priority than function.
 
 # ls aliases.
 unalias ll &> /dev/null
@@ -333,7 +364,7 @@ sed_escape() {
   return 0
 }
 
-export my_prefix="  "
+export my_prefix=""
 
 echo "${my_prefix}Nikolai's .my-bash-environment v.1.0" >&2
 
@@ -400,10 +431,12 @@ fi
 # ========================================
 
 echo "${my_prefix}Welcome!" >&2
-echo "" >&2
 
 if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR}" ]; then
-  clear
+  # We clear only first shell
+  if [ "$(is_first_shell 5)" = "1" ]; then
+    clear
+  fi
 fi
 
 if [ "${was_installation_failed}" = "1" ]; then
