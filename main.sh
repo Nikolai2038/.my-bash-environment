@@ -88,7 +88,7 @@ is_first_shell() {
     local name
     name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
 
-    # We will find first process, which ends with "sh" - we assume it is our first shell
+    # We will find a first process, which ends with "sh" - we assume it is our first shell
     if echo "${name}" | grep -e '^.*sh$' > /dev/null; then
       if [ "${was_sh}" = "1" ]; then
         echo 0
@@ -110,7 +110,7 @@ export is_first_command=-1
 alias clear="is_first_command=-1; clear"
 alias reset="is_first_command=-1; reset"
 
-export is_command_executing=0
+is_command_executing=0
 
 get_seconds_parts() {
   local seconds
@@ -171,7 +171,7 @@ ps1_function() {
   shell="$(/bin/ps -p $$ -o 'comm=')"
 
   # If is first command in session
-  # Because we can't catch this behaviour in "sh", we don't check it there
+  # Because we can't catch this behavior in "sh", we don't check it there
   if [ "$(is_first_shell 6)" = "1" ] && [ "${is_first_command}" = "1" ] && [ "${shell}" != "sh" ]; then
     my_echo_en "${C_BORDER}  ${C_RESET}"
   else
@@ -236,7 +236,7 @@ ps1_function() {
     local name
     name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
 
-    # We will find first process, which ends with "sh" - we assume it is our first shell
+    # We will find a first process, which ends with "sh" - we assume it is our first shell
     if echo "${name}" | grep -e '^.*sh$' > /dev/null; then
       was_sh=1
     fi
@@ -283,18 +283,18 @@ export PS2="\$(${my_echo_en_script}; ${get_seconds_parts_script}; ${ps2_function
 alias sudo="sudo "
 
 # We use some functions as aliases.
-# But we must unalias functions names if they exist, because alias have more priority than function.
+# But we must unalias functions' names if they exist, because alias has more priority than function.
 
 # ls aliases.
 unalias ll &> /dev/null
 ll() {
   # We use "sed" to remove "total".
-  # For "total" we check only beginning of the line because of units after number.
+  # For "total" we check only the beginning of the line because of units after number.
   # shellcheck disable=SC2012
   ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
   return 0
 }
-alias lla="ll  --almost-all"
+alias lla="ll --almost-all"
 unalias lls &> /dev/null
 lls() {
   # We don't use "-1" from "ls" because it does not show us where links are pointing.
@@ -384,7 +384,7 @@ this_script_path="$(realpath "${BASH_SOURCE[0]}")"
 
 using_script_path="$(sed -En "s/^source[[:blank:]]+\"?([^[:blank:]\"]+?)\"?[[:blank:]]*?${postfix_escaped}\$/\\1/p" "${bashrc_file}")"
 
-# If script is not installed
+# If the script is not installed
 if [ -z "${using_script_path}" ]; then
   # This script will be the one to be used.
   # We also replace user's home path with variable to make it more mobile.:wq
@@ -399,8 +399,9 @@ fi
 # To expand "${HOME}"
 using_script_path="$(eval "echo \"${using_script_path}\"")"
 
-echo "${my_prefix}Using bashrc: \"${bashrc_file}\"" >&2
-echo "${my_prefix}Using script path: \"${using_script_path}\"" >&2
+# DEBUG:
+# echo "${my_prefix}Using bashrc: \"${bashrc_file}\"" >&2
+# echo "${my_prefix}Using script path: \"${using_script_path}\"" >&2
 
 using_dir_path=""
 if [ -n "${using_script_path}" ]; then
@@ -408,7 +409,7 @@ if [ -n "${using_script_path}" ]; then
 fi
 
 if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
-  # We check script directory - if it has GIT, we assume, it is development, and we will not update file to not override local changes
+  # We check the script directory - if it has GIT, we assume, it is development, and we will not update the file to not override local changes
   if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep "${repository_url}"; } &> /dev/null; then
     echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
 
@@ -433,7 +434,7 @@ fi
 echo "${my_prefix}Welcome!" >&2
 
 if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR}" ]; then
-  # We clear only first shell
+  # We clear only the first shell
   if [ "$(is_first_shell 5)" = "1" ]; then
     clear
   fi
@@ -447,5 +448,5 @@ if [ "${was_autoupdate_failed}" = "1" ]; then
   echo "${my_prefix}Failed to update \"${using_script_path}\" - autoupdate skipped." >&2
 fi
 
-# This must be last command in this file
+# This must be the last command in this file
 is_first_command=-1
