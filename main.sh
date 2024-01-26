@@ -417,20 +417,35 @@ get_directory_hash() {
   fi
 
   # We check file permissions too
-  find "${@}" -type f | LC_ALL=C sort | xargs -I {} sh -c '{ ls -al {} | cut -d " " -f 1; cat {}; }' | sha256sum || return "$?"
+  local files
+  files="$(find "${@}" -type f | LC_ALL=C sort)" || return "$?"
+  if [ -n "${files}" ]; then
+    echo "${files}" | xargs -I {} sh -c '{ ls -al {} | cut -d " " -f 1; cat {}; }' | sha256sum || return "$?"
+  else
+    echo ""
+  fi
   return 0
 }
 
 autoupdate() {
   local temp_dir="$1" && { shift || true; }
 
+  # DEBUG:
+  echo "Current hash..." >&2
+
   local hash_current
   hash_current="$(get_directory_hash "${using_dir_path}")" || return "$?"
 
+  # DEBUG:
+  echo "Cloning..." >&2
+
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
-  git clone "${repository_url}" "${temp_dir}" > /dev/null || return "$?"
+  git clone "${repository_url}" "${temp_dir}" || return "$?"
   rm -rf "${temp_dir}/.git" || return "$?"
+
+  # DEBUG:
+  echo "New hash..." >&2
 
   local hash_new
   hash_new="$(get_directory_hash "${temp_dir}")" || return "$?"
