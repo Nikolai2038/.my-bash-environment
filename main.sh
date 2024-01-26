@@ -75,6 +75,11 @@ export my_echo_en_script
 my_echo_en_script="$(typeset -f my_echo_en)"
 
 is_first_shell() {
+  if ! pstree --help &> /dev/null; then
+    echo 0
+    return 0
+  fi
+
   # Number of last processes to ignore
   local level="${1}" && { shift || true; }
 
@@ -239,28 +244,32 @@ ps1_function() {
   echo ''
   my_echo_en "${C_BORDER}┌${C_RESET}"
 
-  # ----------------------------------------
-  # Print shell tree in line
-  # ----------------------------------------
-  local was_sh=0
-  # Remove last 5 processes: subshell, function call, subshell, "pstree" and "head".
-  # Also remove spaces, so we can iterate over processes
-  local tree_as_string
-  tree_as_string="$(pstree -aps $$ | head -n -5 | tr -d '[:blank:]')"
-  local line
-  for line in ${tree_as_string}; do
-    local name
-    name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
+  if ! pstree --help &> /dev/null; then
+    my_echo_en "${C_BORDER}─[${shell}]${C_RESET}"
+  else
+    # ----------------------------------------
+    # Print shell tree in line
+    # ----------------------------------------
+    local was_sh=0
+    # Remove last 5 processes: subshell, function call, subshell, "pstree" and "head".
+    # Also remove spaces, so we can iterate over processes
+    local tree_as_string
+    tree_as_string="$(pstree -aps $$ | head -n -5 | tr -d '[:blank:]')"
+    local line
+    for line in ${tree_as_string}; do
+      local name
+      name=$(echo "${line}" | sed -En 's/^[^a-zA-Z]*?([a-zA-Z]+)[^a-zA-Z]+?.*?$/\1/p')
 
-    # We will find a first process, which ends with "sh" - we assume it is our first shell
-    if echo "${name}" | grep -e '^.*sh$' > /dev/null; then
-      was_sh=1
-    fi
+      # We will find a first process, which ends with "sh" - we assume it is our first shell
+      if echo "${name}" | grep -e '^.*sh$' > /dev/null; then
+        was_sh=1
+      fi
 
-    if [ "${was_sh}" = "1" ]; then
-      my_echo_en "${C_BORDER}─[${name}]${C_RESET}"
-    fi
-  done
+      if [ "${was_sh}" = "1" ]; then
+        my_echo_en "${C_BORDER}─[${name}]${C_RESET}"
+      fi
+    done
+  fi
   # ----------------------------------------
 
   my_echo_en "${C_BORDER}─${C_RESET}"
@@ -528,6 +537,12 @@ fi
 
 if [ "${was_autoupdate_failed}" = "1" ]; then
   echo "${my_prefix}Failed to update \"${using_script_path}\" - autoupdate skipped." >&2
+fi
+
+if ! pstree --help &> /dev/null; then
+  echo "Command \"pstree\" not found! It is needed to show shell tree in \"PS1\". Try \"sudo apt-get install -y psmisc\" to install it." >&2
+  echo 0
+  return 0
 fi
 
 # This must be the last command in this file
