@@ -431,21 +431,21 @@ autoupdate() {
   local temp_dir="$1" && { shift || true; }
 
   # DEBUG:
-  echo "Current hash..." >&2
+  # echo "Current hash..." >&2
 
   local hash_current
   hash_current="$(get_directory_hash "${using_dir_path}")" || return "$?"
 
   # DEBUG:
-  echo "Cloning..." >&2
+  # echo "Cloning..." >&2
 
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
-  git clone "${repository_url}" "${temp_dir}" || return "$?"
+  git clone "${repository_url}" "${temp_dir}" > /dev/null || return "$?"
   rm -rf "${temp_dir}/.git" || return "$?"
 
   # DEBUG:
-  echo "New hash..." >&2
+  # echo "New hash..." >&2
 
   local hash_new
   hash_new="$(get_directory_hash "${temp_dir}")" || return "$?"
@@ -453,7 +453,8 @@ autoupdate() {
   # If there are file changes
   if [ "${hash_new}" != "${hash_current}" ]; then
     echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
-    mv --no-target-directory --force "${temp_dir}" "${using_dir_path}" || return "$?"
+    rm -rf "${using_dir_path}" || return "$?"
+    mv --no-target-directory "${temp_dir}" "${using_dir_path}" || return "$?"
     echo "\"${using_dir_path}\" successfully updated!" >&2
   else
     echo "${my_prefix}No updates available." >&2
