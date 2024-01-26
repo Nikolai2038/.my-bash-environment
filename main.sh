@@ -418,7 +418,7 @@ get_directory_hash() {
 
   # We check file permissions too
   local files
-  files="$(find "${@}" -type f | LC_ALL=C sort)" || return "$?"
+  files="$(find "${directory}" -type f | LC_ALL=C sort)" || return "$?"
   if [ -n "${files}" ]; then
     echo "${files}" | xargs -I {} sh -c '{ ls -al {} | cut -d " " -f 1; cat {}; }' | sha256sum || return "$?"
   else
