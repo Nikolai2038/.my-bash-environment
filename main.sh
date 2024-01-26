@@ -366,7 +366,13 @@ sed_escape() {
 
 export my_prefix=""
 
-echo "${my_prefix}Nikolai's .my-bash-environment v.1.0" >&2
+echo_if_messages() {
+  if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES}" ]; then
+    echo "${@}"
+  fi
+}
+
+echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.1.0" >&2
 
 # ========================================
 # Autoupdate
@@ -393,7 +399,7 @@ if [ -z "${using_script_path}" ]; then
 
   # Install it
   echo "source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
-  echo "\"${bashrc_file}\" successfully updated!" >&2
+  echo_if_messages "\"${bashrc_file}\" successfully updated!" >&2
 fi
 
 # To expand "${HOME}"
@@ -441,7 +447,11 @@ autoupdate() {
 
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
-  git clone "${repository_url}" "${temp_dir}" > /dev/null || return "$?"
+  if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES}" ]; then
+  git clone "${repository_url}" "${temp_dir}" || return "$?"
+  else
+  git clone "${repository_url}" "${temp_dir}" &> /dev/null || return "$?"
+  fi
   rm -rf "${temp_dir}/.git" || return "$?"
 
   # DEBUG:
@@ -455,9 +465,9 @@ autoupdate() {
     echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
     rm -rf "${using_dir_path}" || return "$?"
     mv --no-target-directory "${temp_dir}" "${using_dir_path}" || return "$?"
-    echo "\"${using_dir_path}\" successfully updated!" >&2
+    echo_if_messages "\"${using_dir_path}\" successfully updated!" >&2
   else
-    echo "${my_prefix}No updates available." >&2
+    echo_if_messages "${my_prefix}No updates available." >&2
   fi
 
   return 0
@@ -476,14 +486,14 @@ if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
       rm -rf "${temp_dir}"
     fi
   else
-    echo "${my_prefix}GIT directory found - autoupdate will not be executed." >&2
+    echo_if_messages "${my_prefix}GIT directory found - autoupdate will not be executed." >&2
   fi
 else
-  echo "${my_prefix}Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
+  echo_if_messages "${my_prefix}Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
 fi
 # ========================================
 
-echo "${my_prefix}Welcome!" >&2
+echo_if_messages "${my_prefix}Welcome, ${USER}!" >&2
 
 if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR}" ]; then
   # We clear only the first shell
