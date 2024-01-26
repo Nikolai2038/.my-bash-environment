@@ -118,13 +118,24 @@ get_seconds_parts() {
 
   local extra_second_parts
   extra_second_parts="$(date +%N)" || return "$?"
+  # DEBUG:
+  # echo "1 extra_second_parts: '${extra_second_parts}'" >&2
 
   # Remove leading zeros (to avoid "printf: invalid octal number" error)
   extra_second_parts="${extra_second_parts#"${extra_second_parts%%[!0]*}"}"
+  # DEBUG:
+  # echo "2 extra_second_parts: '${extra_second_parts}'" >&2
 
   extra_second_parts="$(printf '%09d' "${extra_second_parts}")" || return "$?"
-  #extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
-  extra_second_parts="$(echo "${extra_second_parts}" | sed -En "s/^(.{${accuracy}}).*\$/\1/p")"
+  # DEBUG:
+  # echo "3 extra_second_parts: '${extra_second_parts}'" >&2
+
+  # Method 1: This method does not work in "sh" (but we don't calculate time there)
+  extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
+  # Method 2: This method works in "sh" (but we don't calculate time there), but for some reason, it does not work in "su -"
+  # extra_second_parts="$(echo "${extra_second_parts}" | sed -En "s/^(.{${accuracy}}).*\$/\1/p")"
+  # DEBUG:
+  # echo "4 extra_second_parts: '${extra_second_parts}'" >&2
 
   echo "${seconds}${extra_second_parts}"
 
@@ -186,6 +197,11 @@ ps1_function() {
       fi
       local seconds_parts
       seconds_parts="$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))"
+
+      # DEBUG:
+      # echo "timestamp_end_seconds_parts: ${timestamp_end_seconds_parts}" >&2
+      # echo "timestamp_start_seconds_parts: ${timestamp_start_seconds_parts}" >&2
+      # echo "seconds_parts: ${seconds_parts}" >&2
 
       local seconds="$((seconds_parts / accuracy_tens))"
       local milliseconds="$((seconds_parts - seconds * accuracy_tens))"
@@ -452,9 +468,9 @@ autoupdate() {
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
   if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-1}" = "0" ]; then
-  git clone "${repository_url}" "${temp_dir}" || return "$?"
+    git clone "${repository_url}" "${temp_dir}" || return "$?"
   else
-  git clone "${repository_url}" "${temp_dir}" &> /dev/null || return "$?"
+    git clone "${repository_url}" "${temp_dir}" &> /dev/null || return "$?"
   fi
   rm -rf "${temp_dir}/.git" || return "$?"
 
@@ -466,7 +482,7 @@ autoupdate() {
 
   # If there are file changes
   if [ "${hash_new}" != "${hash_current}" ]; then
-    echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
+    echo_if_messages "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
     rm -rf "${using_dir_path}" || return "$?"
     mv --no-target-directory "${temp_dir}" "${using_dir_path}" || return "$?"
     echo_if_messages "\"${using_dir_path}\" successfully updated!" >&2
