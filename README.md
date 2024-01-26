@@ -24,9 +24,9 @@ Script will autoupdate itself. You can disable it via env-variables (see below).
 
 You can change script's behaviour via env-variables:
 
-- `N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE` - if set, will disable autoupdate (default: empty);
-- `N2038_DISABLE_BASH_ENVIRONMENT_CLEAR` - if set, will disable `clear` after shell creates (default: empty);
-- `N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES` - if set, will disable some messages on new shell created (default: empty).
+- `N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE` - if equals to `1`, will disable autoupdate (default: `0`);
+- `N2038_DISABLE_BASH_ENVIRONMENT_CLEAR` - if equals to `1`, will disable `clear` after shell creates (default: `0`);
+- `N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES` - if equals to `1`, will disable some messages on new shell created (default: `0`).
 
 You should set their values in your `.bashrc` file. Example:
 

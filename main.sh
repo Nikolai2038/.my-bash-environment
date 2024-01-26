@@ -367,7 +367,7 @@ sed_escape() {
 export my_prefix=""
 
 echo_if_messages() {
-  if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES}" ]; then
+  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-0}" = "0" ]; then
     echo "${@}"
   fi
 }
@@ -398,7 +398,11 @@ if [ -z "${using_script_path}" ]; then
   using_script_path="${this_script_path//"${HOME}"/'${HOME}'}"
 
   # Install it
-  echo "source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
+  echo "
+N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE=0
+N2038_DISABLE_BASH_ENVIRONMENT_CLEAR=0
+N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES=0
+source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
   echo_if_messages "\"${bashrc_file}\" successfully updated!" >&2
 fi
 
@@ -447,7 +451,7 @@ autoupdate() {
 
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
-  if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES}" ]; then
+  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-0}" = "0" ]; then
   git clone "${repository_url}" "${temp_dir}" || return "$?"
   else
   git clone "${repository_url}" "${temp_dir}" &> /dev/null || return "$?"
@@ -473,7 +477,7 @@ autoupdate() {
   return 0
 }
 
-if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE}" ]; then
+if [ "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE:-0}" = "0" ]; then
   # We check the script directory - if it has GIT, we assume, it is development, and we will not update the file to not override local changes
   if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep "${repository_url}"; } &> /dev/null; then
     # Create temp dir
@@ -495,7 +499,7 @@ fi
 
 echo_if_messages "${my_prefix}Welcome, ${USER}!" >&2
 
-if [ -z "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR}" ]; then
+if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-0}" = "0" ]; then
   # We clear only the first shell
   if [ "$(is_first_shell 5)" = "1" ]; then
     clear
