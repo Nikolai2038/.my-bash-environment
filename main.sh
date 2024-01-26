@@ -438,7 +438,7 @@ autoupdate() {
   # If there are file changes
   if [ "${hash_new}" != "${hash_current}" ]; then
     echo "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
-    mv --force "${temp_dir}" "${using_dir_path}" || return "$?"
+    mv --no-target-directory --force "${temp_dir}" "${using_dir_path}" || return "$?"
     echo "\"${using_dir_path}\" successfully updated!" >&2
   else
     echo "${my_prefix}No updates available." >&2
