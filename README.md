@@ -7,14 +7,14 @@ My configs to easily download and use on new machines.
 1. Install `curl`:
 
    ```bash
-   sudo apt update && sudo apt install -y curl
+   sudo apt update && sudo apt install -y curl git
    ```
 
 2. Execute:
 
     ```bash
-   git clone https://github.com/Nikolai2038/.my-bash-environment.git
-   rm -rf ./.my-bash-environment/.git
+   git clone https://github.com/Nikolai2038/.my-bash-environment.git && \
+   rm -rf ./.my-bash-environment/.git && \
    source ./.my-bash-environment/main.sh
     ```
 
