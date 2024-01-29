@@ -75,7 +75,7 @@ export my_echo_en_script
 my_echo_en_script="$(typeset -f my_echo_en)"
 
 is_first_shell() {
-  if ! pstree --version &> /dev/null; then
+  if ! pstree --version 2> /dev/null; then
     echo 0
     return 0
   fi
@@ -176,8 +176,6 @@ function_to_execute_after_command() {
 export PROMPT_COMMAND="function_to_execute_after_command"
 
 ps1_function() {
-  local command_result=$?
-
   local error_code_color="${C_ERROR}"
   if [ "${command_result}" -eq 0 ]; then
     error_code_color="${C_SUCCESS}"
@@ -244,7 +242,7 @@ ps1_function() {
   echo ''
   my_echo_en "${C_BORDER}┌${C_RESET}"
 
-  if ! pstree --version &> /dev/null; then
+  if ! pstree --version 2> /dev/null; then
     my_echo_en "${C_BORDER}─[${shell}]${C_RESET}"
   else
     # ----------------------------------------
@@ -284,7 +282,7 @@ ps1_function() {
 export ps1_function_script
 ps1_function_script="$(typeset -f ps1_function)"
 
-export PS1="\$(${my_echo_en_script}; ${is_first_shell_script}; ${get_seconds_parts_script}; ${ps1_function_script}; ps1_function)"
+export PS1="\$(command_result=\"\$?\"; ${my_echo_en_script}; ${is_first_shell_script}; ${get_seconds_parts_script}; ${ps1_function_script}; ps1_function)"
 
 ps2_function() {
   local command_result=$?
@@ -539,7 +537,7 @@ if [ "${was_autoupdate_failed}" = "1" ]; then
   echo "${my_prefix}Failed to update \"${using_script_path}\" - autoupdate skipped." >&2
 fi
 
-if ! pstree --version &> /dev/null; then
+if ! pstree --version 2> /dev/null; then
   echo "Command \"pstree\" not found! It is needed to show shell tree in \"PS1\". Try \"sudo apt-get install -y psmisc\" to install it." >&2
   echo 0
   return 0
