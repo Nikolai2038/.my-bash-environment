@@ -5,6 +5,8 @@
 # ----------------------------------------
 export EDITOR=vim
 
+# We need "\[" and "\]" to help bash understand, that it is colors (otherwise bash will break when we navigate in commands history).
+# But we add them in get_function_definition_with_colors_replaced.
 export C_TEXT="\033[38;5;02m"
 export C_ERROR="\033[38;5;01m"
 export C_SUCCESS="\033[38;5;02m"
@@ -38,6 +40,26 @@ fi
 
 # We need to calculate this in bash, because in sh (if we go to it) operator "**" does not exist
 export accuracy_tens="$((10 ** accuracy))"
+
+functions_to_use=""
+
+# Must not use export here!
+current_shell=""
+# We make function to find shell name
+get_current_shell () {
+  if [ -z "${current_shell}" ]; then
+    current_shell="$(/bin/ps -p $$ -o 'comm=')"
+  fi
+
+  echo "${current_shell}"
+  return 0
+}
+# Because "sh" can't export functions, we use variables
+export get_current_shell_script
+get_current_shell_script="$(typeset -f get_current_shell)"
+functions_to_use="${functions_to_use}${get_current_shell_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${get_current_shell_script}"
 # ----------------------------------------
 
 # ----------------------------------------
@@ -59,10 +81,37 @@ HISTFILESIZE=2000
 shopt -s checkwinsize
 # ----------------------------------------
 
+sed_escape() {
+    echo "$@" | sed -e 's/[]\/$*.^;|{}()[]/\\&/g' || return "$?"
+    return 0
+}
+
+# We must specify colors in PS1 variable (or they won't work inside script inside PS1)
+get_function_definition_with_colors_replaced() {
+  local function_name="$1" && { shift || true; }
+
+  local open_brace_script='$(if [ "$(get_current_shell)" = "bash" ]; then echo "\["; fi)'
+  local close_brace_script='$(if [ "$(get_current_shell)" = "bash" ]; then echo "\]"; fi)'
+
+  typeset -f "${function_name}" | \
+    sed -E "s/$(sed_escape "\${C_TEXT}")/$(sed_escape "${open_brace_script}${C_TEXT}${close_brace_script}")/g" | \
+    sed -E "s/$(sed_escape "\${C_ERROR}")/$(sed_escape "${open_brace_script}${C_ERROR}${close_brace_script}")/g" | \
+    sed -E "s/$(sed_escape "\${C_SUCCESS}")/$(sed_escape "${open_brace_script}${C_SUCCESS}${close_brace_script}")/g" | \
+    sed -E "s/$(sed_escape "\${C_BORDER}")/$(sed_escape "${open_brace_script}${C_BORDER}${close_brace_script}")/g" | \
+    sed -E "s/$(sed_escape "\${C_RESET}")/$(sed_escape "${open_brace_script}${C_RESET}${close_brace_script}")/g" || return "$?"
+  return 0
+}
+# Because "sh" can't export functions, we use variables
+export get_function_definition_with_colors_replaced_script
+get_function_definition_with_colors_replaced_script="$(typeset -f get_function_definition_with_colors_replaced)"
+functions_to_use="${functions_to_use}${get_function_definition_with_colors_replaced_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${get_function_definition_with_colors_replaced_script}"
+
 # For some reason, "echo" in "sh" does not recognize "-e" option, so we do not use it
 my_echo_en() {
   local shell
-  shell="$(/bin/ps -p $$ -o 'comm=')"
+  shell="$(get_current_shell)"
 
   if [ "${shell}" = "sh" ]; then
     echo -n "$@"
@@ -72,7 +121,10 @@ my_echo_en() {
 }
 # Because "sh" can't export functions, we use variables
 export my_echo_en_script
-my_echo_en_script="$(typeset -f my_echo_en)"
+my_echo_en_script="$(get_function_definition_with_colors_replaced my_echo_en)"
+functions_to_use="${functions_to_use}${my_echo_en_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${my_echo_en_script}"
 
 is_first_shell() {
   if ! pstree --version 2> /dev/null; then
@@ -108,7 +160,10 @@ is_first_shell() {
 }
 # Because "sh" can't export functions, we use variables
 export is_first_shell_script
-is_first_shell_script="$(typeset -f is_first_shell)"
+is_first_shell_script="$(get_function_definition_with_colors_replaced is_first_shell)"
+functions_to_use="${functions_to_use}${is_first_shell_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${is_first_shell_script}"
 
 # We do not display information about the execution of the last command for the very first output in the session
 export is_first_command=-1
@@ -148,7 +203,10 @@ get_seconds_parts() {
 }
 # Because "sh" can't export functions, we use variables
 export get_seconds_parts_script
-get_seconds_parts_script="$(typeset -f get_seconds_parts)"
+get_seconds_parts_script="$(get_function_definition_with_colors_replaced get_seconds_parts)"
+functions_to_use="${functions_to_use}${get_seconds_parts_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${get_seconds_parts_script}"
 
 # Executed immediately after running the command
 function_to_execute_before_command() {
@@ -159,7 +217,10 @@ function_to_execute_before_command() {
 }
 # Because "sh" can't export functions, we use variables
 export function_to_execute_before_command_script
-function_to_execute_before_command_script="$(typeset -f function_to_execute_before_command)"
+function_to_execute_before_command_script="$(get_function_definition_with_colors_replaced function_to_execute_before_command)"
+functions_to_use="${functions_to_use}${function_to_execute_before_command_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${function_to_execute_before_command_script}"
 # Works only for "bash", so we ignore this functional later
 trap function_to_execute_before_command DEBUG
 
@@ -182,7 +243,7 @@ ps1_function() {
   fi
 
   local shell
-  shell="$(/bin/ps -p $$ -o 'comm=')"
+  shell="$(get_current_shell)"
 
   # If is first command in session
   # Because we can't catch this behavior in "sh", we don't check it there
@@ -280,9 +341,10 @@ ps1_function() {
 }
 # Because "sh" can't export functions, we use variables
 export ps1_function_script
-ps1_function_script="$(typeset -f ps1_function)"
-
-export PS1="\$(command_result=\"\$?\"; ${my_echo_en_script}; ${is_first_shell_script}; ${get_seconds_parts_script}; ${ps1_function_script}; ps1_function)"
+ps1_function_script="$(get_function_definition_with_colors_replaced ps1_function)"
+functions_to_use="${functions_to_use}${ps1_function_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${ps1_function_script}"
 
 ps2_function() {
   local command_result=$?
@@ -298,9 +360,13 @@ ps2_function() {
 }
 # Because "sh" can't export functions, we use variables
 export ps2_function_script
-ps2_function_script="$(typeset -f ps2_function)"
+ps2_function_script="$(get_function_definition_with_colors_replaced ps2_function)"
+functions_to_use="${functions_to_use}${ps2_function_script};"
+# Update function body (we replaced colors' variables with their values)
+eval "${ps2_function_script}"
 
-export PS2="\$(${my_echo_en_script}; ${get_seconds_parts_script}; ${ps2_function_script}; ps2_function)"
+export PS1="\$(command_result=\"\$?\"; ${functions_to_use} ps1_function)"
+export PS2="\$(${functions_to_use} ps2_function)"
 
 # To use aliases in sudo too
 alias sudo="sudo "
