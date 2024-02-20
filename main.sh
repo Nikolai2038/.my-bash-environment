@@ -381,9 +381,8 @@ alias sudo="sudo "
 unalias lls &> /dev/null
 lls() {
   # We use "sed" to remove "total".
-  # For "total" we check only the beginning of the line because of units after number.
   # shellcheck disable=SC2012
-  ls -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
+  ls -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '1d' || return "$?"
   return 0
 }
 
