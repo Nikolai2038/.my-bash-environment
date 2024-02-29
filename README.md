@@ -4,10 +4,10 @@ My configs to easily download and use on new machines.
 
 ## Install
 
-1. Install `curl`:
+1. Make sure `curl` and `git` are installed:
 
    ```bash
-   sudo apt update && sudo apt install -y curl git
+   sudo apt-get update && sudo apt-get install -y curl git
    ```
 
 2. Execute:
