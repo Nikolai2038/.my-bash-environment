@@ -374,34 +374,46 @@ alias sudo="sudo "
 # We use some functions as aliases.
 # But we must unalias functions' names if they exist, because alias has more priority than function.
 
-# ls aliases.
-unalias ll &> /dev/null
-ll() {
-  # We use "sed" to remove "total".
-  # For "total" we check only the beginning of the line because of units after number.
-  # shellcheck disable=SC2012
-  ls -v -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^total [0-9]+?.*$/d' || return "$?"
-  return 0
-}
-alias lla="ll --almost-all"
+# ========================================
+# ls aliases
+# ========================================
+# 1. Detailed list
 unalias lls &> /dev/null
 lls() {
+  # We use "sed" to remove "total".
+  # shellcheck disable=SC2012
+  ls -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '1d' || return "$?"
+  return 0
+}
+
+# 2. Detailed list with hidden files
+alias llsa="ll --almost-all"
+
+# 3. Simple list
+unalias ll &> /dev/null
+ll() {
   # We don't use "-1" from "ls" because it does not show us where links are pointing.
   # Instead, we use "cut".
   # We use "tr" to remove duplicate spaces - for "cut" to work properly.
-  ll "${@}" | tr -s '[:blank:]' | cut -d ' ' -f 8- || return "$?"
+  lls "${@}" | tr -s '[:blank:]' | cut -d ' ' -f 8- || return "$?"
   return 0
 }
-alias llsa="lls --almost-all"
-# Aliases to print list in Markdown format
-unalias llsl &> /dev/null
-llsl() {
+
+# 4. Simple list with hidden files
+alias lla="ll --almost-all"
+
+# 5. Simple list without hidden files (Markdown format)
+unalias llm &> /dev/null
+llm() {
   # shellcheck disable=2016
-  lls "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
+  ll "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
   return 0
 }
-alias llsal="llsl --almost-all"
-alias llsla="llsal"
+
+# 6. Simple list with hidden files (Markdown format)
+alias llam="llm --almost-all"
+alias llma="llam"
+# ========================================
 
 # Use as alias but without space
 unalias examples &> /dev/null
