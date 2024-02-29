@@ -406,7 +406,7 @@ alias lla="ll --almost-all"
 unalias llm &> /dev/null
 llm() {
   # shellcheck disable=2016
-  ll "${@}" | sed -E 's/^(.*)$/- `\1`/' || return "$?"
+  ll "${@}" | sed -E 's/^(.*)$/- `\1`;/' || return "$?"
   return 0
 }
 
