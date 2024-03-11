@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # ----------------------------------------
 # Settings
@@ -21,7 +21,7 @@ export accuracy=2
 # Calculations
 # ----------------------------------------
 export C_RESET
-C_RESET="$(tput sgr0)"
+C_RESET=$'\E(B\E[m'
 
 if [ "$(id --user "${USER}")" = "0" ]; then
   export is_root=1
@@ -43,15 +43,9 @@ export accuracy_tens="$((10 ** accuracy))"
 
 functions_to_use=""
 
-# Must not use export here!
-current_shell=""
-# We make function to find shell name
+# Prints current shell name
 get_current_shell () {
-  if [ -z "${current_shell}" ]; then
-    current_shell="$(/bin/ps -p $$ -o 'comm=')"
-  fi
-
-  echo "${current_shell}"
+  echo "$0" | sed 's/[^a-z]//g' || return "$?"
   return 0
 }
 # Because "sh" can't export functions, we use variables
