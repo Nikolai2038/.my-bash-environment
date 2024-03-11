@@ -1,5 +1,56 @@
 #!/bin/sh
 
+# ----------------------------------------
+# Settings
+# ----------------------------------------
+export EDITOR=vim
+
+# We need "\[" and "\]" to help bash understand, that it is colors (otherwise bash will break when we navigate in commands history).
+# But we add them in get_function_definition_with_colors_replaced.
+export _C_TEXT="\033[38;5;02m"
+export _C_ERROR="\033[38;5;01m"
+export _C_SUCCESS="\033[38;5;02m"
+export _C_BORDER_USUAL="\033[38;5;27m"
+export _C_BORDER_ROOT="\033[38;5;90m"
+export _C_RESET='\e[0m'
+
+# From 1 to 9 - The number of decimals for the command execution time
+export accuracy=2
+# ----------------------------------------
+
+# ----------------------------------------
+# Calculations
+# ----------------------------------------
+# We need to calculate this via loop, because in sh operator "**" does not exist
+export accuracy_tens=1
+i=0
+while [ "${i}" -lt "${accuracy}" ]; do
+  accuracy_tens="$((accuracy_tens * 10))"
+  i="$((i + 1))"
+done
+# ----------------------------------------
+
+if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
+  # ----------------------------------------
+  # From Debian .bashrc
+  # ----------------------------------------
+  # don't put duplicate lines or lines starting with space in the history.
+  # See bash(1) for more options
+  HISTCONTROL=ignoreboth
+
+  # append to the history file, don't overwrite it
+  shopt -s histappend
+
+  # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+  HISTSIZE=1000
+  HISTFILESIZE=2000
+
+  # check the window size after each command and, if necessary,
+  # update the values of LINES and COLUMNS.
+  shopt -s checkwinsize
+  # ----------------------------------------
+fi
+
 # Code to execute when starting "sh"
 export eval_code_for_sh=""
 
@@ -52,9 +103,6 @@ update_shell_info() {
 
   CURRENT_SHELL_NAME="$(get_current_shell)" || return "$?"
 
-  # ----------------------------------------
-  # Calculations
-  # ----------------------------------------
   # If user is root
   if [ "$(id --user "${USER}")" = "0" ]; then
     export is_root=1
@@ -72,7 +120,6 @@ update_shell_info() {
 
     export sudo_prefix="sudo "
   fi
-  # ----------------------------------------
 
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
     # Braces "\[" and "\]" are required, so "bash" can understand, that this is colors and not output.
@@ -96,7 +143,7 @@ update_shell_info() {
   fi
   return 0
 }
-export_function_for_sh init
+export_function_for_sh update_shell_info
 
 # For some reason, "echo" in "sh" does not recognize "-e" option, so we do not use it
 my_echo_en() {
@@ -129,56 +176,5 @@ export PS1="\$(
 export PS2='$(
   ps2_function
 )'
-
-# ----------------------------------------
-# Settings
-# ----------------------------------------
-export EDITOR=vim
-
-# We need "\[" and "\]" to help bash understand, that it is colors (otherwise bash will break when we navigate in commands history).
-# But we add them in get_function_definition_with_colors_replaced.
-export _C_TEXT="\033[38;5;02m"
-export _C_ERROR="\033[38;5;01m"
-export _C_SUCCESS="\033[38;5;02m"
-export _C_BORDER_USUAL="\033[38;5;27m"
-export _C_BORDER_ROOT="\033[38;5;90m"
-export _C_RESET='\e[0m'
-
-# From 1 to 9 - The number of decimals for the command execution time
-export accuracy=2
-# ----------------------------------------
-
-if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
-  # ----------------------------------------
-  # From Debian .bashrc
-  # ----------------------------------------
-  # don't put duplicate lines or lines starting with space in the history.
-  # See bash(1) for more options
-  HISTCONTROL=ignoreboth
-
-  # append to the history file, don't overwrite it
-  shopt -s histappend
-
-  # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-  HISTSIZE=1000
-  HISTFILESIZE=2000
-
-  # check the window size after each command and, if necessary,
-  # update the values of LINES and COLUMNS.
-  shopt -s checkwinsize
-# ----------------------------------------
-fi
-
-# ----------------------------------------
-# Calculations
-# ----------------------------------------
-# We need to calculate this via loop, because in sh operator "**" does not exist
-export accuracy_tens=1
-i=0
-while [ "${i}" -lt "${accuracy}" ]; do
-  accuracy_tens="$((accuracy_tens * 10))"
-  i="$((i + 1))"
-done
-# ----------------------------------------
 
 update_shell_info
