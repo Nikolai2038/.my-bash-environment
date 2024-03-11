@@ -99,7 +99,7 @@ update_shell_info() {
     PARENTS_COUNT_ROOT_SHELL="$(get_process_depth)"
   fi
   PARENTS_COUNT="$(get_process_depth)"
-  PARENTS_COUNT="$((PARENTS_COUNT - PARENTS_COUNT_ROOT_SHELL))"
+  PARENTS_COUNT="$((PARENTS_COUNT - PARENTS_COUNT_ROOT_SHELL - 1))"
 
   CURRENT_SHELL_NAME="$(get_current_shell)" || return "$?"
 
@@ -157,18 +157,47 @@ export_function_for_sh my_echo_en
 
 ps1_function() {
   update_shell_info || return "$?"
-  my_echo_en "${C_BORDER}${PARENTS_COUNT} ${CURRENT_SHELL_NAME} \$ ${C_RESET}"
+
+  my_echo_en "${C_BORDER}└─${C_RESET}"
+
+  error_code_color="${C_ERROR}"
+  if [ "${command_result}" -eq 0 ]; then
+    error_code_color="${C_SUCCESS}"
+  fi
+  my_echo_en "${C_BORDER}[${error_code_color}$(printf '%03d' ${command_result#0})${C_BORDER}]─${C_RESET}"
+
+  # We use env instead of "\"-variables because they do not exist in "sh"
+  # ${PWD} = \w
+  # ${USER} = \u
+  # $(hostname) = \h
+  my_echo_en "${C_BORDER}[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}"
+
+  # Extra new line between commands
+  echo ''
+
+  echo ''
+  my_echo_en "${C_BORDER}┌─[${PARENTS_COUNT}]─[${CURRENT_SHELL_NAME}]${C_RESET}"
+
+  my_echo_en "${C_BORDER}─${C_RESET}"
+  # Different symbol for root
+  if [ "${is_root}" -eq 1 ]; then
+    my_echo_en "${C_BORDER}# ${C_RESET}"
+  else
+    my_echo_en "${C_BORDER}\$ ${C_RESET}"
+  fi
+
   return 0
 }
 export_function_for_sh ps1_function
 
 ps2_function() {
-  my_echo_en "${C_BORDER}${PARENTS_COUNT} ${CURRENT_SHELL_NAME} > ${C_RESET}"
+  my_echo_en "${C_BORDER}├─${C_BORDER}> ${C_RESET}"
   return 0
 }
 export_function_for_sh ps2_function
 
 export PS1="\$(
+  command_result=\"\$?\"
   ${eval_code_for_sh}
   ps1_function
 )"
