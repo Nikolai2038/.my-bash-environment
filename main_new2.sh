@@ -20,9 +20,11 @@ export_function_for_sh() {
     eval "${function_name_as}_EXPORT=\"\$(echo \"\${${function_name_as}_EXPORT}\" | sed 's/$(sed_escape "${function_name}")/$(sed_escape "${function_name_as}")/')\"" || return "$?"
   fi
   eval_code_for_sh="${eval_code_for_sh}
-    if [ -n \"\${${function_name_as}_EXPORT}\" ]; then
-      eval \"\${${function_name_as}_EXPORT}\";
-    fi;
+    $(eval "
+      if [ -n \"\${${function_name_as}_EXPORT}\" ]; then
+        echo \"\${${function_name_as}_EXPORT}\";
+      fi;
+    ")
   "
   unset function_name
   return 0
@@ -53,10 +55,6 @@ init() {
   PARENTS_COUNT="$(get_process_depth)"
   PARENTS_COUNT="$((PARENTS_COUNT - PARENTS_COUNT_ROOT_SHELL))"
 
-  # This variable is available only locally, so we only execute "init", if it is empty
-#  if [ -n "${CURRENT_SHELL_NAME}" ]; then
-#    return 0
-#  fi
   CURRENT_SHELL_NAME="$(get_current_shell)" || return "$?"
 
   # ----------------------------------------
@@ -106,15 +104,17 @@ init() {
   # ----------------------------------------
 
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
+    echo INIT BASH
+
     # Braces "\[" and "\]" are required, so "bash" can understand, that this is colors and not output.
     # If we do not use them, the shell will break when we try to navigate in commands' history.
-    C_TEXT="\\[${_C_TEXT}\\]"
-    C_ERROR="\\[${_C_ERROR}\\]"
-    C_SUCCESS="\\[${_C_SUCCESS}\\]"
-    C_BORDER_USUAL="\\[${_C_BORDER_USUAL}\\]"
-    C_BORDER_ROOT="\\[${_C_BORDER_ROOT}\\]"
-    C_BORDER="\\[${_C_BORDER}\\]"
-    C_RESET="\\[${_C_RESET}\\]"
+    C_TEXT="\[${_C_TEXT}\]"
+    C_ERROR="\[${_C_ERROR}\]"
+    C_SUCCESS="\[${_C_SUCCESS}\]"
+    C_BORDER_USUAL="\[${_C_BORDER_USUAL}\]"
+    C_BORDER_ROOT="\[${_C_BORDER_ROOT}\]"
+    C_BORDER="\[${_C_BORDER}\]"
+    C_RESET="\[${_C_RESET}\]"
 
     # ----------------------------------------
     # From Debian .bashrc
@@ -135,6 +135,8 @@ init() {
     shopt -s checkwinsize
   # ----------------------------------------
   else
+    echo INIT SH
+
     # "sh" does not have commands' history, and braces will result in just text, so we don't use them here
     C_TEXT="${_C_TEXT}"
     C_ERROR="${_C_ERROR}"
@@ -159,31 +161,13 @@ my_echo_en() {
 }
 export_function_for_sh my_echo_en
 
-replace_colors_in_text() {
-  text="$1" && { shift || true; }
-  # shellcheck disable=SC2016
-  echo -n "${text}" | \
-    sed -E "s/$(sed_escape '${C_TEXT}')/$(sed_escape "${C_TEXT}")/g" | \
-    sed -E "s/$(sed_escape '${C_ERROR}')/$(sed_escape "${C_ERROR}")/g" | \
-    sed -E "s/$(sed_escape '${C_SUCCESS}')/$(sed_escape "${C_SUCCESS}")/g" | \
-    sed -E "s/$(sed_escape '${C_BORDER_USUAL}')/$(sed_escape "${C_BORDER_USUAL}")/g" | \
-    sed -E "s/$(sed_escape '${C_BORDER_ROOT}')/$(sed_escape "${C_BORDER_ROOT}")/g" | \
-    sed -E "s/$(sed_escape '${C_BORDER}')/$(sed_escape "${C_BORDER}")/g" | \
-    sed -E "s/$(sed_escape '${C_RESET}')/$(sed_escape "${C_RESET}")/g"
-}
-export_function_for_sh replace_colors_in_text
-
 ps1_function_for_TEMPLATE() {
   init || return "$?"
   my_echo_en "${C_BORDER}${PARENTS_COUNT} ${CURRENT_SHELL_NAME} \$ ${C_RESET}"
   return 0
 }
 export_function_for_sh ps1_function_for_TEMPLATE ps1_function_for_bash
-ps1_function_for_bash_EXPORT="$(replace_colors_in_text "${ps1_function_for_bash_EXPORT}")"
-eval "${ps1_function_for_bash_EXPORT}"
 export_function_for_sh ps1_function_for_TEMPLATE ps1_function_for_sh
-ps1_function_for_sh_EXPORT="$(replace_colors_in_text "${ps1_function_for_sh_EXPORT}")"
-eval "${ps1_function_for_sh_EXPORT}"
 
 ps1_function() {
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
@@ -200,11 +184,7 @@ ps2_function_for_TEMPLATE() {
   return 0
 }
 export_function_for_sh ps2_function_for_TEMPLATE ps2_function_for_bash
-ps2_function_for_bash_EXPORT="$(replace_colors_in_text "${ps2_function_for_bash_EXPORT}")"
-eval "${ps2_function_for_bash_EXPORT}"
 export_function_for_sh ps2_function_for_TEMPLATE ps2_function_for_sh
-ps2_function_for_sh_EXPORT="$(replace_colors_in_text "${ps2_function_for_sh_EXPORT}")"
-eval "${ps2_function_for_sh_EXPORT}"
 
 ps2_function() {
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
