@@ -30,6 +30,9 @@ while [ "${i}" -lt "${accuracy}" ]; do
 done
 # ----------------------------------------
 
+# Code to execute when starting "sh"
+export eval_code_for_sh=""
+
 if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
   # ----------------------------------------
   # From Debian .bashrc
@@ -51,8 +54,13 @@ if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
   # ----------------------------------------
 fi
 
-# Code to execute when starting "sh"
-export eval_code_for_sh=""
+PS_TREE_MINUS=9
+if pstree --version 2> /dev/null; then
+  export IS_PSTREE=1
+else
+  export IS_PSTREE=0
+  echo "Command \"pstree\" not found! It is needed to show shell tree in \"PS1\". Try \"sudo apt-get install -y psmisc\" to install it." >&2
+fi
 
 # Creates variable, which contains full function declaration and body.
 # This variable will be exported and be available in "sh" ("sh" can't export functions).
@@ -86,39 +94,30 @@ get_current_shell() {
 export_function_for_sh get_current_shell
 
 get_process_depth() {
+  if [ "${IS_PSTREE}" = "0" ]; then
+    echo "${PS_TREE_MINUS}"
+    return 0
+  fi
+
   # Head to hide sub pipelines.
   # Remember, that "wc" command also counts.
-  pstree --ascii --long --show-parents --hide-threads --arguments $$ | wc -l || return "$?"
+  pstree --ascii --long --show-parents --hide-threads --arguments $$ | sed -E '/^[[:blank:]]+`-(sudo .+|su .+|su)$/d' | wc -l || return "$?"
   return 0
 }
 export_function_for_sh get_process_depth
 
 update_shell_info() {
-  if [ -z "${PARENTS_COUNT_ROOT_SHELL}" ]; then
-    export PARENTS_COUNT_ROOT_SHELL
-    PARENTS_COUNT_ROOT_SHELL="$(get_process_depth)"
-  fi
-  PARENTS_COUNT="$(get_process_depth)"
-  PARENTS_COUNT="$((PARENTS_COUNT - PARENTS_COUNT_ROOT_SHELL - 1))"
-
   CURRENT_SHELL_NAME="$(get_current_shell)" || return "$?"
 
   # If user is root
   if [ "$(id --user "${USER}")" = "0" ]; then
-    export is_root=1
-  else
-    export is_root=0
-  fi
-
-  if [ "${is_root}" = "1" ]; then
-    # Different color for root
     export _C_BORDER="${_C_BORDER_ROOT}"
-
     export sudo_prefix=""
+    export PS_SYMBOL="#"
   else
     export _C_BORDER="${_C_BORDER_USUAL}"
-
     export sudo_prefix="sudo "
+    export PS_SYMBOL="\$"
   fi
 
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
@@ -127,8 +126,6 @@ update_shell_info() {
     C_TEXT="\[${_C_TEXT}\]"
     C_ERROR="\[${_C_ERROR}\]"
     C_SUCCESS="\[${_C_SUCCESS}\]"
-    C_BORDER_USUAL="\[${_C_BORDER_USUAL}\]"
-    C_BORDER_ROOT="\[${_C_BORDER_ROOT}\]"
     C_BORDER="\[${_C_BORDER}\]"
     C_RESET="\[${_C_RESET}\]"
   else
@@ -136,8 +133,6 @@ update_shell_info() {
     C_TEXT="${_C_TEXT}"
     C_ERROR="${_C_ERROR}"
     C_SUCCESS="${_C_SUCCESS}"
-    C_BORDER_USUAL="${_C_BORDER_USUAL}"
-    C_BORDER_ROOT="${_C_BORDER_ROOT}"
     C_BORDER="${_C_BORDER}"
     C_RESET="${_C_RESET}"
   fi
@@ -147,7 +142,7 @@ export_function_for_sh update_shell_info
 
 # For some reason, "echo" in "sh" does not recognize "-e" option, so we do not use it
 my_echo_en() {
-  if [ "$(get_current_shell)" = "bash" ]; then
+  if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
     echo -en "$@"
   else
     echo -n "$@"
@@ -158,33 +153,20 @@ export_function_for_sh my_echo_en
 ps1_function() {
   update_shell_info || return "$?"
 
-  my_echo_en "${C_BORDER}└─${C_RESET}"
-
   error_code_color="${C_ERROR}"
   if [ "${command_result}" -eq 0 ]; then
     error_code_color="${C_SUCCESS}"
   fi
-  my_echo_en "${C_BORDER}[${error_code_color}$(printf '%03d' ${command_result#0})${C_BORDER}]─${C_RESET}"
+
+  PARENTS_COUNT="$(get_process_depth)"
 
   # We use env instead of "\"-variables because they do not exist in "sh"
   # ${PWD} = \w
   # ${USER} = \u
   # $(hostname) = \h
-  my_echo_en "${C_BORDER}[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}"
+  my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}
 
-  # Extra new line between commands
-  echo ''
-
-  echo ''
-  my_echo_en "${C_BORDER}┌─[${PARENTS_COUNT}]─[${CURRENT_SHELL_NAME}]${C_RESET}"
-
-  my_echo_en "${C_BORDER}─${C_RESET}"
-  # Different symbol for root
-  if [ "${is_root}" -eq 1 ]; then
-    my_echo_en "${C_BORDER}# ${C_RESET}"
-  else
-    my_echo_en "${C_BORDER}\$ ${C_RESET}"
-  fi
+${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${CURRENT_SHELL_NAME}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }
