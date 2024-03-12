@@ -33,19 +33,39 @@ fi
 # This variable will be exported and be available in "sh" ("sh" can't export functions).
 export_function_for_sh() {
   function_name="${1}" && { shift || true; }
-  eval "export ${function_name}_EXPORT"
-  eval "${function_name}_EXPORT=\"\$(typeset -f \"${function_name}\")\"" || return "$?"
-  eval_code_for_sh="${eval_code_for_sh}
+  variable_name="${function_name}_EXPORT"
+
+  eval "export ${variable_name}"
+  eval "${variable_name}=\"\$(typeset -f \"${function_name}\")\"" || return "$?"
+
+  function_body="
     $(eval "
-      if [ -n \"\${${function_name}_EXPORT}\" ]; then
-        echo \"\${${function_name}_EXPORT}\";
+      if [ -n \"\${${variable_name}}\" ]; then
+        echo \"\${${variable_name}}\";
       fi;
     ")
   "
+
+  if echo "${function_body}" | grep "C_" > /dev/null 2>&1; then
+    is_contains_colors=1
+  else
+    is_contains_colors=0
+  fi
+
+  if [ "${is_contains_colors}" = "1" ]; then
+    # Functions with colors we need to specify in PS1 itself, otherwise, the colors will not be shown correctly
+    eval_code_for_sh="${eval_code_for_sh}
+      ${function_body}
+    "
+  else
+    # Other functions we can call directly - to make PS1 command smaller for performance (very little improvement but still)
+    eval_code_for_sh="${eval_code_for_sh}
+      eval \"\${${variable_name}}\";
+    "
+  fi
   unset function_name
   return 0
 }
-export_function_for_sh export_function_for_sh
 
 # Prints current shell name
 get_current_shell() {

@@ -76,28 +76,22 @@ function_to_execute_after_command() {
 export PROMPT_COMMAND="function_to_execute_after_command"
 
 get_execution_time() {
-  if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
-    local timestamp_end_seconds_parts
-    timestamp_end_seconds_parts="$(get_seconds_parts)"
-    if [ -z "${timestamp_start_seconds_parts}" ]; then
-      timestamp_start_seconds_parts="${timestamp_end_seconds_parts}"
-    fi
-    local seconds_parts
-    seconds_parts="$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))"
+  local timestamp_end_seconds_parts
+  timestamp_end_seconds_parts="$(get_seconds_parts)"
+  local seconds_parts="$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))"
 
-    # DEBUG:
-    # echo "timestamp_end_seconds_parts: ${timestamp_end_seconds_parts}" >&2
-    # echo "timestamp_start_seconds_parts: ${timestamp_start_seconds_parts}" >&2
-    # echo "seconds_parts: ${seconds_parts}" >&2
+  # DEBUG:
+  # echo "timestamp_end_seconds_parts: ${timestamp_end_seconds_parts}" >&2
+  # echo "timestamp_start_seconds_parts: ${timestamp_start_seconds_parts}" >&2
+  # echo "seconds_parts: ${seconds_parts}" >&2
 
-    local seconds="$((seconds_parts / accuracy_tens))"
-    local milliseconds="$((seconds_parts - seconds * accuracy_tens))"
+  local seconds="$((seconds_parts / accuracy_tens))"
+  local milliseconds="$((seconds_parts - seconds * accuracy_tens))"
 
-    local time_to_print
-    time_to_print="${seconds}.$(printf "%0${accuracy}d" "${milliseconds#0}")"
+  local time_to_print
+  time_to_print="${seconds}.$(printf "%0${accuracy}d" "${milliseconds#0}")"
 
-    my_echo_en "[${time_to_print}]─"
-  fi
+  my_echo_en "[${time_to_print}]─"
 }
 export_function_for_sh get_execution_time
 
@@ -109,32 +103,7 @@ alias reset="is_first_command=-1; reset"
 is_command_executing=0
 
 get_seconds_parts() {
-  local seconds
-  seconds="$(date +%s)" || return "$?"
-
-  local extra_second_parts
-  extra_second_parts="$(date +%N)" || return "$?"
-  # DEBUG:
-  # echo "1 extra_second_parts: '${extra_second_parts}'" >&2
-
-  # Remove leading zeros (to avoid "printf: invalid octal number" error)
-  extra_second_parts="${extra_second_parts#"${extra_second_parts%%[!0]*}"}"
-  # DEBUG:
-  # echo "2 extra_second_parts: '${extra_second_parts}'" >&2
-
-  extra_second_parts="$(printf '%09d' "${extra_second_parts}")" || return "$?"
-  # DEBUG:
-  # echo "3 extra_second_parts: '${extra_second_parts}'" >&2
-
-  # Method 1: This method does not work in "sh" (but we don't calculate time there)
-  extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
-  # Method 2: This method works in "sh" (but we don't calculate time there), but for some reason, it does not work in "su -"
-  # extra_second_parts="$(echo "${extra_second_parts}" | sed -En "s/^(.{${accuracy}}).*\$/\1/p")"
-  # DEBUG:
-  # echo "4 extra_second_parts: '${extra_second_parts}'" >&2
-
-  echo "${seconds}${extra_second_parts}"
-
+  date +"%s %N" | sed -E "s/^([0-9]+) ([0-9]{0,${accuracy}})[0-9]*\$/\1\2/" || return "$?"
   return 0
 }
 export_function_for_sh get_seconds_parts
