@@ -14,8 +14,6 @@ export _C_BORDER_USUAL="\033[38;5;27m"
 export _C_BORDER_ROOT="\033[38;5;90m"
 export _C_RESET='\e[0m'
 
-export PS_TREE_MINUS=9
-
 DIRECTORY_WITH_THIS_SCRIPT="${HOME}/.my-bash-environment"
 # ----------------------------------------
 
@@ -86,8 +84,9 @@ get_username() {
 export_function_for_sh get_username
 
 get_process_depth() {
+  # "pstree" is not available in MINGW, so we don't return any error
   if [ "${IS_PSTREE}" = "0" ]; then
-    echo "${PS_TREE_MINUS}"
+    echo ""
     return 0
   fi
 
@@ -153,8 +152,6 @@ ps1_function() {
     error_code_color="${C_SUCCESS}"
   fi
 
-  PARENTS_COUNT="$(get_process_depth)"
-
   git_part=""
   if [ -d .git ]; then
     git_branch_name="$(git branch 2> /dev/null | cut -d ' ' -f 2)" || git_branch_name=""
@@ -166,12 +163,19 @@ ps1_function() {
       git_part="─${C_BORDER}[${C_TEXT}???${C_BORDER}]"
     fi
   fi
-  
-  CURRENT_SHELL_NAME_TO_SHOW=""
+
+  current_shell_name_to_show=""
   if [ -n "${MSYSTEM}" ]; then
-      CURRENT_SHELL_NAME_TO_SHOW="${MSYSTEM}"
+    current_shell_name_to_show="${MSYSTEM}"
   else
-      CURRENT_SHELL_NAME_TO_SHOW="${CURRENT_SHELL_NAME}"
+    current_shell_name_to_show="${CURRENT_SHELL_NAME}"
+  fi
+
+  PARENTS_COUNT="$(get_process_depth)"
+  pstree_part=""
+  if [ -n "${PARENTS_COUNT}" ]; then
+    # We use minus 1 for PARENTS_COUNT because this function was called from this function, so one extra parent
+    pstree_part="─[$((PARENTS_COUNT - PS_TREE_MINUS - 1))]"
   fi
 
   # We use env instead of "\"-variables because they do not exist in "sh"
@@ -180,7 +184,7 @@ ps1_function() {
   # $(hostname) = \h
   my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[$(get_username)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
 
-${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${C_TEXT}${CURRENT_SHELL_NAME_TO_SHOW}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌${pstree_part}─[${C_TEXT}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }
@@ -197,6 +201,12 @@ get_execution_time() {
   return 0
 }
 export_function_for_sh get_execution_time
+
+export PS_TREE_MINUS
+# We save parent shell depth
+if [ -z "${PS_TREE_MINUS}" ]; then
+  PS_TREE_MINUS="$(get_process_depth)"
+fi
 
 CURRENT_SHELL_NAME="$(get_current_shell)"
 if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
