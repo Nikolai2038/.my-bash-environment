@@ -167,11 +167,11 @@ ps1_function() {
     fi
   fi
   
-  mingw_part=""
+  CURRENT_SHELL_NAME_TO_SHOW=""
   if [ -n "${MSYSTEM}" ]; then
-      mingw_part="${C_TEXT}${MSYSTEM}${C_BORDER}"
+      CURRENT_SHELL_NAME_TO_SHOW="${MSYSTEM}"
   else
-      mingw_part="${CURRENT_SHELL_NAME}"
+      CURRENT_SHELL_NAME_TO_SHOW="${CURRENT_SHELL_NAME}"
   fi
 
   # We use env instead of "\"-variables because they do not exist in "sh"
@@ -180,7 +180,7 @@ ps1_function() {
   # $(hostname) = \h
   my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[$(get_username)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
 
-${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${mingw_part}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${C_TEXT}${CURRENT_SHELL_NAME_TO_SHOW}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }

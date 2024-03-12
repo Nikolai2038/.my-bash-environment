@@ -6,7 +6,17 @@
 # From 1 to 9 - The number of decimals for the command execution time
 export accuracy=2
 
+# Connection timeout for checking internet connection before autoupdate
 export CHECK_CONNECTION_TIMEOUT=0.3
+
+# Directory with scripts
+DIRECTORY_WITH_SCRIPTS="${HOME}/.my-bash-environment"
+# Path to ".bashrc"
+BASHRC_FILE="${HOME}/.bashrc"
+# Repository with these scripts
+REPOSITORY_URL="https://github.com/Nikolai2038/.my-bash-environment.git"
+# Postfix to add in the end of lines in ".bashrc"
+N2038_POSTFIX=" # n2038 .my-bash-environment"
 # ----------------------------------------
 
 # ----------------------------------------
@@ -117,41 +127,26 @@ echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.1" >&2
 was_autoupdate_failed=0
 was_installation_failed=0
 
-repository_url="https://github.com/Nikolai2038/.my-bash-environment.git"
-bashrc_file="${HOME}/.bashrc"
-postfix=" # n2038 .my-bash-environment"
-postfix_escaped="$(sed_escape "${postfix}")"
+postfix_escaped="$(sed_escape "${N2038_POSTFIX}")"
 
-using_script_path="$(sed -En "s/^source[[:blank:]]+\"?([^[:blank:]\"]+?)\"?[[:blank:]]*?${postfix_escaped}\$/\\1/p" "${bashrc_file}")"
+using_script_path=""
+# Check if ".bashrc" contains command to source main script
+if [ -f "${BASHRC_FILE}" ]; then
+  using_script_path="$(sed -En "s/^source[[:blank:]]+\"?([^[:blank:]\"]+?)\"?[[:blank:]]*?${postfix_escaped}\$/\\1/p" "${BASHRC_FILE}")"
+fi
 
-# If the script is not installed
+# If not - add this line
 if [ -z "${using_script_path}" ]; then
-  this_script_path="$(realpath "${BASH_SOURCE[0]}")"
-
-  # This script will be the one to be used.
-  # We also replace user's home path with variable to make it more mobile.
   # shellcheck disable=2016
-  using_script_path="${this_script_path//"${HOME}"/'${HOME}'}"
+  using_script_path='${HOME}/.my-bash-environment/main.sh'
 
   # Install it
   echo "
 N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE=0
 N2038_DISABLE_BASH_ENVIRONMENT_CLEAR=1
 N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES=1
-source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
-  echo_if_messages "\"${bashrc_file}\" successfully updated!" >&2
-fi
-
-# To expand "${HOME}"
-using_script_path="$(eval "echo \"${using_script_path}\"")"
-
-# DEBUG:
-# echo "${my_prefix}Using bashrc: \"${bashrc_file}\"" >&2
-# echo "${my_prefix}Using script path: \"${using_script_path}\"" >&2
-
-using_dir_path=""
-if [ -n "${using_script_path}" ]; then
-  using_dir_path="$(dirname "${using_script_path}")"
+source \"${using_script_path}\" ${N2038_POSTFIX}" >> "${BASHRC_FILE}" || was_installation_failed=1
+  echo_if_messages "\"${BASHRC_FILE}\" successfully updated!" >&2
 fi
 
 check_connection() {
@@ -190,14 +185,14 @@ autoupdate() {
   fi
 
   local hash_current
-  hash_current="$(get_directory_hash "${using_dir_path}")" || return "$?"
+  hash_current="$(get_directory_hash "${DIRECTORY_WITH_SCRIPTS}")" || return "$?"
 
   # Update this file itself (will be applied in next session)
   # TODO: Make external updater to update this script in this session
   if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-1}" = "0" ]; then
-    git clone "${repository_url}" "${temp_dir}" || return "$?"
+    git clone "${REPOSITORY_URL}" "${temp_dir}" || return "$?"
   else
-    git clone "${repository_url}" "${temp_dir}" > /dev/null 2>&1 || return "$?"
+    git clone "${REPOSITORY_URL}" "${temp_dir}" > /dev/null 2>&1 || return "$?"
   fi
   rm -rf "${temp_dir}/.git" || return "$?"
 
@@ -206,10 +201,10 @@ autoupdate() {
 
   # If there are file changes
   if [ "${hash_new}" != "${hash_current}" ]; then
-    echo_if_messages "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
-    rm -rf "${using_dir_path}" || return "$?"
-    mv --no-target-directory "${temp_dir}" "${using_dir_path}" || return "$?"
-    echo_if_messages "\"${using_dir_path}\" successfully updated!" >&2
+    echo_if_messages "Updating \"${DIRECTORY_WITH_SCRIPTS}\" from \"${REPOSITORY_URL}\"..." >&2
+    rm -rf "${DIRECTORY_WITH_SCRIPTS}" || return "$?"
+    mv --no-target-directory "${temp_dir}" "${DIRECTORY_WITH_SCRIPTS}" || return "$?"
+    echo_if_messages "\"${DIRECTORY_WITH_SCRIPTS}\" successfully updated!" >&2
   else
     echo_if_messages "${my_prefix}No updates available." >&2
   fi
@@ -219,7 +214,7 @@ autoupdate() {
 
 if [ "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE:-0}" = "0" ]; then
   # We check the script directory - if it has GIT, we assume, it is development, and we will not update the file to not override local changes
-  if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep "${repository_url}"; } > /dev/null 2>&1; then
+  if ! { git -C "${DIRECTORY_WITH_SCRIPTS}" remote -v | head -n 1 | grep "${REPOSITORY_URL}"; } > /dev/null 2>&1; then
     # Create temp dir
     temp_dir="$(mktemp --directory)" || return "$?"
 
@@ -247,7 +242,7 @@ if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-1}" = "0" ]; then
 fi
 
 if [ "${was_installation_failed}" = "1" ]; then
-  echo "${my_prefix}Failed to install \"${using_script_path}\" in \"${bashrc_file}\"." >&2
+  echo "${my_prefix}Failed to install \"${using_script_path}\" in \"${BASHRC_FILE}\"." >&2
 fi
 
 if [ "${was_autoupdate_failed}" = "1" ]; then
