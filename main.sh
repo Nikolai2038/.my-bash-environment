@@ -215,7 +215,8 @@ lls() {
 }
 
 # 2. Detailed list with hidden files
-alias llsa="ll --almost-all"
+alias llas="lls --almost-all"
+alias llsa="llas"
 
 # 3. Simple list
 unalias ll > /dev/null 2>&1
