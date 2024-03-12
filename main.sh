@@ -244,7 +244,7 @@ unalias lls > /dev/null 2>&1
 lls() {
   # We use "sed" to remove "total".
   # shellcheck disable=SC2012
-  ls -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed '/^(total|всего)/d' || return "$?"
+  ls -F --group-directories-first --color -l --human-readable --time-style=long-iso "${@}" | sed -E '/^(total|всего)/d' || return "$?"
   return 0
 }
 
