@@ -290,6 +290,10 @@ gacp() {
   gp || return "$?"
   return 0
 }
+
+# Docker aliases
+alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
+alias dpsa='dps --all'
 # ========================================
 
 export my_prefix=""
