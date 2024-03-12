@@ -91,7 +91,7 @@ update_shell_info() {
 
   # If user is root
   # Second condition is for MINGW in Windows - we are checking for admin rights
-  if [ "$(id --user "${USER}")" = "0" ] || [ -n "${MSYSTEM}" ] && sfc 2>&1 | tr -d '\0' | grep "SCANNOW"; then
+  if [ -z "${MSYSTEM}" ] && [ "$(id --user "${USER}")" = "0" ] || [ -n "${MSYSTEM}" ] && sfc 2>&1 | tr -d '\0' | grep "SCANNOW"; then
     export _C_BORDER="${_C_BORDER_ROOT}"
     export sudo_prefix=""
     export PS_SYMBOL="#"
