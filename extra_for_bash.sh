@@ -155,7 +155,7 @@ if [ -n "${using_script_path}" ]; then
 fi
 
 check_connection() {
-  curl --fail --max-time "${CHECK_CONNECTION_TIMEOUT}" https://github.com/Nikolai2038/.my-bash-environment.git
+  curl --fail --silent --show-error --max-time "${CHECK_CONNECTION_TIMEOUT}" https://github.com/Nikolai2038/.my-bash-environment.git > /dev/null
   return "$?"
 }
 
