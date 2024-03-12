@@ -26,7 +26,6 @@ if pstree --version 2> /dev/null; then
   export IS_PSTREE=1
 else
   export IS_PSTREE=0
-  echo 'Command "pstree" not found! It is needed to show shell depth level is "PS1". Try "sudo apt-get install -y psmisc" to install it.' >&2
 fi
 
 # Creates variable, which contains full function declaration and body.
@@ -69,7 +68,7 @@ export_function_for_sh() {
 
 # Prints current shell name
 get_current_shell() {
-  echo "$0" | sed 's/[^a-z]//g' || return "$?"
+  echo "$0" | sed -E 's/^(.*[^a-z]+)?([a-z]+)$/\2/' || return "$?"
   return 0
 }
 export_function_for_sh get_current_shell
@@ -91,7 +90,8 @@ update_shell_info() {
   CURRENT_SHELL_NAME="$(get_current_shell)" || return "$?"
 
   # If user is root
-  if [ "$(id --user "${USER}")" = "0" ]; then
+  # Second condition is for MINGW in Windows - we are checking for admin rights
+  if [ "$(id --user "${USER}")" = "0" ] || [ -n "${MSYSTEM}" ] && sfc 2>&1 | tr -d '\0' | grep "SCANNOW"; then
     export _C_BORDER="${_C_BORDER_ROOT}"
     export sudo_prefix=""
     export PS_SYMBOL="#"
@@ -154,6 +154,11 @@ ps1_function() {
       git_part="─${C_BORDER}[${C_TEXT}???${C_BORDER}]"
     fi
   fi
+  
+  mingw_part=""
+  if [ -n "${MSYSTEM}" ]; then
+      mingw_part=" ${C_BORDER}(${C_TEXT}${MSYSTEM}${C_BORDER})"
+  fi
 
   # We use env instead of "\"-variables because they do not exist in "sh"
   # ${PWD} = \w
@@ -161,7 +166,7 @@ ps1_function() {
   # $(hostname) = \h
   my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
 
-${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${CURRENT_SHELL_NAME}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${CURRENT_SHELL_NAME}${mingw_part}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }

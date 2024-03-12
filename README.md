@@ -4,10 +4,10 @@ My configs to easily download and use on new machines.
 
 ## Install
 
-1. Make sure `curl` and `git` are installed:
+1. Make sure `curl` and `git` are installed. Also, if you want to see terminal depth, install `psmisc` for `pstree` command:
 
    ```bash
-   sudo apt-get update && sudo apt-get install -y curl git
+   sudo apt-get update && sudo apt-get install -y curl git psmisc
    ```
 
 2. Execute:
