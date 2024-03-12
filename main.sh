@@ -123,11 +123,23 @@ ps1_function() {
 
   PARENTS_COUNT="$(get_process_depth)"
 
+  git_part=""
+  if [ -d .git ]; then
+    git_branch_name="$(git branch 2> /dev/null | cut -d ' ' -f 2)" || git_branch_name=""
+
+    if [ -n "${git_branch_name}" ]; then
+      git_part="─${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]"
+    elif git status > /dev/null 2>&1; then
+      # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
+      git_part="─${C_BORDER}[${C_TEXT}???${C_BORDER}]"
+    fi
+  fi
+
   # We use env instead of "\"-variables because they do not exist in "sh"
   # ${PWD} = \w
   # ${USER} = \u
   # $(hostname) = \h
-  my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}
+  my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
 
 ${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${CURRENT_SHELL_NAME}]─${PS_SYMBOL} ${C_RESET}"
 
