@@ -65,6 +65,7 @@ export_function_for_sh() {
   unset function_name
   return 0
 }
+export_function_for_sh export_function_for_sh
 
 # Prints current shell name
 get_current_shell() {
@@ -72,6 +73,17 @@ get_current_shell() {
   return 0
 }
 export_function_for_sh get_current_shell
+
+# Prints current shell name
+get_username() {
+  if [ -n "${MSYSTEM}" ]; then
+    echo "${USERNAME}"
+  else
+    echo "${USER}"
+  fi
+  return 0
+}
+export_function_for_sh get_username
 
 get_process_depth() {
   if [ "${IS_PSTREE}" = "0" ]; then
@@ -91,7 +103,7 @@ update_shell_info() {
 
   # If user is root
   # Second condition is for MINGW in Windows - we are checking for admin rights
-  if [ -z "${MSYSTEM}" ] && [ "$(id --user "${USER}")" = "0" ] || [ -n "${MSYSTEM}" ] && sfc 2>&1 | tr -d '\0' | grep "SCANNOW"; then
+  if [ -z "${MSYSTEM}" ] && [ "$(id --user "$(get_username)")" = "0" ] || [ -n "${MSYSTEM}" ] && sfc 2>&1 | tr -d '\0' | grep "SCANNOW" > /dev/null; then
     export _C_BORDER="${_C_BORDER_ROOT}"
     export sudo_prefix=""
     export PS_SYMBOL="#"
@@ -157,16 +169,18 @@ ps1_function() {
   
   mingw_part=""
   if [ -n "${MSYSTEM}" ]; then
-      mingw_part=" ${C_BORDER}(${C_TEXT}${MSYSTEM}${C_BORDER})"
+      mingw_part="${C_TEXT}${MSYSTEM}${C_BORDER}"
+  else
+      mingw_part="${CURRENT_SHELL_NAME}"
   fi
 
   # We use env instead of "\"-variables because they do not exist in "sh"
   # ${PWD} = \w
-  # ${USER} = \u
+  # ${USER} or ${USERNAME} in MINGW = \u
   # $(hostname) = \h
-  my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
+  my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[$(get_username)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
 
-${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${CURRENT_SHELL_NAME}${mingw_part}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${mingw_part}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }
