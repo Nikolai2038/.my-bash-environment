@@ -17,9 +17,9 @@ export _C_RESET='\e[0m'
 # From 1 to 9 - The number of decimals for the command execution time
 export accuracy=2
 
-export CHECK_CONNECTION_TIMEOUT=0.3
-
 export PS_TREE_MINUS=9
+
+DIRECTORY_WITH_THIS_SCRIPT="${HOME}/.my-bash-environment"
 # ----------------------------------------
 
 # ----------------------------------------
@@ -37,33 +37,11 @@ done
 # Code to execute when starting "sh"
 export eval_code_for_sh=""
 
-# shellcheck disable=3044
-if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
-  # ----------------------------------------
-  # From Debian .bashrc
-  # ----------------------------------------
-  # don't put duplicate lines or lines starting with space in the history.
-  # See bash(1) for more options
-  HISTCONTROL=ignoreboth
-
-  # append to the history file, don't overwrite it
-  shopt -s histappend
-
-  # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
-  HISTSIZE=1000
-  HISTFILESIZE=2000
-
-  # check the window size after each command and, if necessary,
-  # update the values of LINES and COLUMNS.
-  shopt -s checkwinsize
-  # ----------------------------------------
-fi
-
 if pstree --version 2> /dev/null; then
   export IS_PSTREE=1
 else
   export IS_PSTREE=0
-  echo 'Command "pstree" not found! It is needed to show shell tree in "PS1". Try "sudo apt-get install -y psmisc" to install it.' >&2
+  echo 'Command "pstree" not found! It is needed to show shell depth level is "PS1". Try "sudo apt-get install -y psmisc" to install it.' >&2
 fi
 
 # Creates variable, which contains full function declaration and body.
@@ -149,7 +127,7 @@ my_echo_en() {
     # shellcheck disable=SC3037
     echo -en "$@"
   else
-# We don't need "-e" in "sh" (and it does not recognize "-e" option anyway), so we do not use it
+    # We don't need "-e" in "sh" (and it does not recognize "-e" option anyway), so we do not use it
     # shellcheck disable=SC3037
     echo -n "$@"
   fi
@@ -184,6 +162,7 @@ ps2_function() {
 }
 export_function_for_sh ps2_function
 
+# shellcheck disable=2089
 export PS1="\$(
   command_result=\"\$?\"
   ${eval_code_for_sh}
@@ -273,7 +252,7 @@ ai() {
 }
 unalias ar > /dev/null 2>&1
 ar() {
-# shellcheck disable=2086
+  # shellcheck disable=2086
   ${sudo_prefix}apt-get remove -y "$@" || return "$?"
   # shellcheck disable=2086
   ${sudo_prefix}apt-get autoremove -y || return "$?"
@@ -294,163 +273,7 @@ alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{
 alias dpsa='dps --all'
 # ========================================
 
-export my_prefix=""
-
-echo_if_messages() {
-  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-1}" = "0" ]; then
-    echo "${@}"
-  fi
-}
-
-echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.1" >&2
-
-# ========================================
-# Autoupdate
-# ========================================
 if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
-  # We save errors status, so we can print them after "clear"
-  was_autoupdate_failed=0
-  was_installation_failed=0
-
-  repository_url="https://github.com/Nikolai2038/.my-bash-environment.git"
-  bashrc_file="${HOME}/.bashrc"
-  postfix=" # n2038 .my-bash-environment"
-  postfix_escaped="$(sed_escape "${postfix}")"
-
-  # shellcheck disable=3028,3054
-  this_script_path="$(realpath "${BASH_SOURCE[0]}")"
-
-  using_script_path="$(sed -En "s/^source[[:blank:]]+\"?([^[:blank:]\"]+?)\"?[[:blank:]]*?${postfix_escaped}\$/\\1/p" "${bashrc_file}")"
-
-  # If the script is not installed
-  if [ -z "${using_script_path}" ]; then
-    # This script will be the one to be used.
-    # We also replace user's home path with variable to make it more mobile.:wq
-    # shellcheck disable=2016,3060
-    using_script_path="${this_script_path//"${HOME}"/'${HOME}'}"
-
-    # Install it
-    echo "
-N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE=0
-N2038_DISABLE_BASH_ENVIRONMENT_CLEAR=1
-N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES=1
-source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installation_failed=1
-    echo_if_messages "\"${bashrc_file}\" successfully updated!" >&2
-  fi
-
-  # To expand "${HOME}"
-  using_script_path="$(eval "echo \"${using_script_path}\"")"
-
-  # DEBUG:
-  # echo "${my_prefix}Using bashrc: \"${bashrc_file}\"" >&2
-  # echo "${my_prefix}Using script path: \"${using_script_path}\"" >&2
-
-  using_dir_path=""
-  if [ -n "${using_script_path}" ]; then
-    using_dir_path="$(dirname "${using_script_path}")"
-  fi
-
-  check_connection() {
-    curl --fail --max-time ${CHECK_CONNECTION_TIMEOUT} https://github.com/Nikolai2038/.my-bash-environment.git
-    return "$?"
-  }
-
-  get_directory_hash() {
-    directory="$1" && { shift || true; }
-
-    if [ ! -d "${directory}" ]; then
-      echo ""
-      return 0
-    fi
-
-    # We check file permissions too
-    files="$(find "${directory}" -type f | LC_ALL=C sort)" || return "$?"
-    if [ -n "${files}" ]; then
-      echo "${files}" | xargs -I {} sh -c '{ ls -al {} | cut -d " " -f 1; cat {}; }' | sha256sum || return "$?"
-    else
-      echo ""
-    fi
-    return 0
-  }
-
-  autoupdate() {
-    temp_dir="$1" && { shift || true; }
-
-# If can't connect - skip autoupdate
-    if ! check_connection; then
-      echo_if_messages "${my_prefix}Connection failed - autoupdate will not be executed." >&2
-      return 1
-    fi
-
-    # DEBUG:
-    # echo "Current hash..." >&2
-
-    hash_current="$(get_directory_hash "${using_dir_path}")" || return "$?"
-
-    # DEBUG:
-    # echo "Cloning..." >&2
-
-    # Update this file itself (will be applied in next session)
-    # TODO: Make external updater to update this script in this session
-    if [ "${N2038_DISABLE_BASH_ENVIRONMENT_MESSAGES:-1}" = "0" ]; then
-      git clone "${repository_url}" "${temp_dir}" || return "$?"
-    else
-      git clone "${repository_url}" "${temp_dir}" > /dev/null 2>&1 || return "$?"
-    fi
-    rm -rf "${temp_dir}/.git" || return "$?"
-
-    # DEBUG:
-    # echo "New hash..." >&2
-
-    hash_new="$(get_directory_hash "${temp_dir}")" || return "$?"
-
-    # If there are file changes
-    if [ "${hash_new}" != "${hash_current}" ]; then
-      echo_if_messages "Updating \"${using_dir_path}\" from \"${repository_url}\"..." >&2
-      rm -rf "${using_dir_path}" || return "$?"
-      mv --no-target-directory "${temp_dir}" "${using_dir_path}" || return "$?"
-      echo_if_messages "\"${using_dir_path}\" successfully updated!" >&2
-    else
-      echo_if_messages "${my_prefix}No updates available." >&2
-    fi
-
-    return 0
-  }
-
-  if [ "${N2038_DISABLE_BASH_ENVIRONMENT_AUTOUPDATE:-0}" = "0" ]; then
-    # We check the script directory - if it has GIT, we assume, it is development, and we will not update the file to not override local changes
-    if ! { git -C "${using_dir_path}" remote -v | head -n 1 | grep "${repository_url}"; } > /dev/null 2>&1; then
-      # Create temp dir
-      temp_dir="$(mktemp --directory)" || return "$?"
-
-      autoupdate "${temp_dir}" || was_autoupdate_failed=1
-
-      # Clear temp dir
-      if [ -d "${temp_dir}" ]; then
-        rm -rf "${temp_dir}"
-      fi
-    else
-      echo_if_messages "${my_prefix}GIT directory found - autoupdate will not be executed." >&2
-    fi
-  else
-    echo_if_messages "${my_prefix}Env-variable \"DISABLE_BASH_ENVIRONMENT_AUTOUPDATE\" is set - autoupdate skipped." >&2
-  fi
-fi
-# ========================================
-
-echo_if_messages "${my_prefix}Welcome, ${USER}!" >&2
-
-if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-1}" = "0" ]; then
-  # We clear only the first shell
-  if [ "$(get_process_depth)" = "${PS_TREE_MINUS}" ]; then
-    clear
-  fi
-fi
-
-if [ "${was_installation_failed}" = "1" ]; then
-  echo "${my_prefix}Failed to install \"${using_script_path}\" in \"${bashrc_file}\"." >&2
-fi
-
-if [ "${was_autoupdate_failed}" = "1" ]; then
-  echo "${my_prefix}Failed to update \"${using_script_path}\" - autoupdate skipped." >&2
+  # shellcheck source=./extra_for_bash.sh
+  . "${DIRECTORY_WITH_THIS_SCRIPT}/extra_for_bash.sh"
 fi
