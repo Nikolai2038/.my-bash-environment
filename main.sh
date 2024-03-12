@@ -14,24 +14,9 @@ export _C_BORDER_USUAL="\033[38;5;27m"
 export _C_BORDER_ROOT="\033[38;5;90m"
 export _C_RESET='\e[0m'
 
-# From 1 to 9 - The number of decimals for the command execution time
-export accuracy=2
-
 export PS_TREE_MINUS=9
 
 DIRECTORY_WITH_THIS_SCRIPT="${HOME}/.my-bash-environment"
-# ----------------------------------------
-
-# ----------------------------------------
-# Calculations
-# ----------------------------------------
-# We need to calculate this via loop, because in sh operator "**" does not exist
-export accuracy_tens=1
-i=0
-while [ "${i}" -lt "${accuracy}" ]; do
-  accuracy_tens="$((accuracy_tens * 10))"
-  i="$((i + 1))"
-done
 # ----------------------------------------
 
 # Code to execute when starting "sh"
@@ -61,12 +46,6 @@ export_function_for_sh() {
   return 0
 }
 export_function_for_sh export_function_for_sh
-
-sed_escape() {
-  echo "$@" | sed -e 's/[]\/$*.^;|{}()[]/\\&/g' || return "$?"
-  return 0
-}
-export_function_for_sh sed_escape
 
 # Prints current shell name
 get_current_shell() {
@@ -148,7 +127,7 @@ ps1_function() {
   # ${PWD} = \w
   # ${USER} = \u
   # $(hostname) = \h
-  my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}
+  my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[${USER}@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${C_RESET}
 
 ${C_BORDER}┌─[$((PARENTS_COUNT - PS_TREE_MINUS))]─[${CURRENT_SHELL_NAME}]─${PS_SYMBOL} ${C_RESET}"
 
@@ -161,6 +140,18 @@ ps2_function() {
   return 0
 }
 export_function_for_sh ps2_function
+
+# Empty function for "sh", but we will override it for "bash"
+get_execution_time() {
+  return 0
+}
+export_function_for_sh get_execution_time
+
+CURRENT_SHELL_NAME="$(get_current_shell)"
+if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
+  # shellcheck source=./extra_for_bash.sh
+  . "${DIRECTORY_WITH_THIS_SCRIPT}/extra_for_bash.sh"
+fi
 
 # shellcheck disable=2089
 export PS1="\$(
@@ -272,8 +263,3 @@ alias gpull="git pull"
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
 # ========================================
-
-if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
-  # shellcheck source=./extra_for_bash.sh
-  . "${DIRECTORY_WITH_THIS_SCRIPT}/extra_for_bash.sh"
-fi

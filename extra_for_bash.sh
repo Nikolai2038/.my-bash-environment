@@ -3,7 +3,22 @@
 # ----------------------------------------
 # Settings
 # ----------------------------------------
+# From 1 to 9 - The number of decimals for the command execution time
+export accuracy=2
+
 export CHECK_CONNECTION_TIMEOUT=0.3
+# ----------------------------------------
+
+# ----------------------------------------
+# Calculations
+# ----------------------------------------
+# We need to calculate this via loop, because in sh operator "**" does not exist
+export accuracy_tens=1
+i=0
+while [ "${i}" -lt "${accuracy}" ]; do
+  accuracy_tens="$((accuracy_tens * 10))"
+  i="$((i + 1))"
+done
 # ----------------------------------------
 
 # ----------------------------------------
@@ -37,6 +52,92 @@ echo_if_messages() {
     echo "${@}"
   fi
 }
+
+# Executed immediately after running the command
+function_to_execute_before_command() {
+  if [ "${is_command_executing}" = "0" ]; then
+    is_command_executing=1
+    timestamp_start_seconds_parts="$(get_seconds_parts)"
+  fi
+}
+# Works only for "bash", so we ignore this functional later
+trap function_to_execute_before_command DEBUG
+
+# Executed before the PS1 output
+function_to_execute_after_command() {
+  if [ "${is_first_command}" = "-1" ]; then
+    is_first_command=1
+  else
+    is_first_command=0
+  fi
+  is_command_executing=0
+}
+# PROMPT_COMMAND is available only in "bash"
+export PROMPT_COMMAND="function_to_execute_after_command"
+
+get_execution_time() {
+  if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
+    local timestamp_end_seconds_parts
+    timestamp_end_seconds_parts="$(get_seconds_parts)"
+    if [ -z "${timestamp_start_seconds_parts}" ]; then
+      timestamp_start_seconds_parts="${timestamp_end_seconds_parts}"
+    fi
+    local seconds_parts
+    seconds_parts="$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))"
+
+    # DEBUG:
+    # echo "timestamp_end_seconds_parts: ${timestamp_end_seconds_parts}" >&2
+    # echo "timestamp_start_seconds_parts: ${timestamp_start_seconds_parts}" >&2
+    # echo "seconds_parts: ${seconds_parts}" >&2
+
+    local seconds="$((seconds_parts / accuracy_tens))"
+    local milliseconds="$((seconds_parts - seconds * accuracy_tens))"
+
+    local time_to_print
+    time_to_print="${seconds}.$(printf "%0${accuracy}d" "${milliseconds#0}")"
+
+    my_echo_en "[${time_to_print}]─"
+  fi
+}
+export_function_for_sh get_execution_time
+
+# We do not display information about the execution of the last command for the very first output in the session
+export is_first_command=-1
+alias clear="is_first_command=-1; clear"
+alias reset="is_first_command=-1; reset"
+
+is_command_executing=0
+
+get_seconds_parts() {
+  local seconds
+  seconds="$(date +%s)" || return "$?"
+
+  local extra_second_parts
+  extra_second_parts="$(date +%N)" || return "$?"
+  # DEBUG:
+  # echo "1 extra_second_parts: '${extra_second_parts}'" >&2
+
+  # Remove leading zeros (to avoid "printf: invalid octal number" error)
+  extra_second_parts="${extra_second_parts#"${extra_second_parts%%[!0]*}"}"
+  # DEBUG:
+  # echo "2 extra_second_parts: '${extra_second_parts}'" >&2
+
+  extra_second_parts="$(printf '%09d' "${extra_second_parts}")" || return "$?"
+  # DEBUG:
+  # echo "3 extra_second_parts: '${extra_second_parts}'" >&2
+
+  # Method 1: This method does not work in "sh" (but we don't calculate time there)
+  extra_second_parts="${extra_second_parts:0:accuracy}" || return "$?"
+  # Method 2: This method works in "sh" (but we don't calculate time there), but for some reason, it does not work in "su -"
+  # extra_second_parts="$(echo "${extra_second_parts}" | sed -En "s/^(.{${accuracy}}).*\$/\1/p")"
+  # DEBUG:
+  # echo "4 extra_second_parts: '${extra_second_parts}'" >&2
+
+  echo "${seconds}${extra_second_parts}"
+
+  return 0
+}
+export_function_for_sh get_seconds_parts
 
 echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.1" >&2
 
