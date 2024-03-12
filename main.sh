@@ -16,6 +16,10 @@ export _C_RESET='\e[0m'
 
 # From 1 to 9 - The number of decimals for the command execution time
 export accuracy=2
+
+export CHECK_CONNECTION_TIMEOUT=0.3
+
+export PS_TREE_MINUS=9
 # ----------------------------------------
 
 # ----------------------------------------
@@ -55,7 +59,6 @@ if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
   # ----------------------------------------
 fi
 
-PS_TREE_MINUS=9
 if pstree --version 2> /dev/null; then
   export IS_PSTREE=1
 else
@@ -141,12 +144,12 @@ update_shell_info() {
 }
 export_function_for_sh update_shell_info
 
-# For some reason, "echo" in "sh" does not recognize "-e" option, so we do not use it
 my_echo_en() {
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
     # shellcheck disable=SC3037
     echo -en "$@"
   else
+# We don't need "-e" in "sh" (and it does not recognize "-e" option anyway), so we do not use it
     # shellcheck disable=SC3037
     echo -n "$@"
   fi
@@ -270,7 +273,7 @@ ai() {
 }
 unalias ar > /dev/null 2>&1
 ar() {
-  # shellcheck disable=2086
+# shellcheck disable=2086
   ${sudo_prefix}apt-get remove -y "$@" || return "$?"
   # shellcheck disable=2086
   ${sudo_prefix}apt-get autoremove -y || return "$?"
@@ -283,13 +286,8 @@ alias gl="git log --pretty=oneline"
 alias ga="git add ."
 alias gc="git commit -m"
 alias gac="ga && gc"
-alias gp="git push"
-unalias gacp > /dev/null 2>&1
-gacp() {
-  gac "${@}" || return "$?"
-  gp || return "$?"
-  return 0
-}
+alias gpush="git push"
+alias gpull="git pull"
 
 # Docker aliases
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
@@ -304,7 +302,7 @@ echo_if_messages() {
   fi
 }
 
-echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.0" >&2
+echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.1" >&2
 
 # ========================================
 # Autoupdate
@@ -352,6 +350,11 @@ source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installat
     using_dir_path="$(dirname "${using_script_path}")"
   fi
 
+  check_connection() {
+    curl --fail --max-time ${CHECK_CONNECTION_TIMEOUT} https://github.com/Nikolai2038/.my-bash-environment.git
+    return "$?"
+  }
+
   get_directory_hash() {
     directory="$1" && { shift || true; }
 
@@ -372,6 +375,12 @@ source \"${using_script_path}\" ${postfix}" >> "${bashrc_file}" || was_installat
 
   autoupdate() {
     temp_dir="$1" && { shift || true; }
+
+# If can't connect - skip autoupdate
+    if ! check_connection; then
+      echo_if_messages "${my_prefix}Connection failed - autoupdate will not be executed." >&2
+      return 1
+    fi
 
     # DEBUG:
     # echo "Current hash..." >&2
@@ -433,7 +442,7 @@ echo_if_messages "${my_prefix}Welcome, ${USER}!" >&2
 
 if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-1}" = "0" ]; then
   # We clear only the first shell
-  if [ "$(is_first_shell 5)" = "1" ]; then
+  if [ "$(get_process_depth)" = "${PS_TREE_MINUS}" ]; then
     clear
   fi
 fi
