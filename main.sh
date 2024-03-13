@@ -43,7 +43,8 @@ export_function_for_sh() {
     ")
   "
 
-  if echo "${function_body}" | grep "C_" > /dev/null 2>&1; then
+  # Because we will trigger grep on function code, we always be getting true here, so we add another condition
+  if { echo "${function_body}" | grep "C_" > /dev/null 2>&1; } && [ "${function_name}" != "export_function_for_sh" ]; then
     is_contains_colors=1
   else
     is_contains_colors=0
@@ -180,6 +181,7 @@ ${C_BORDER}┌${pstree_part}─[${C_TEXT}${current_shell_name_to_show}${C_BORDER
 export_function_for_sh ps1_function
 
 ps2_function() {
+  update_shell_info || return "$?"
   my_echo_en "${C_BORDER}├─${C_BORDER}> ${C_RESET}"
   return 0
 }
@@ -210,9 +212,10 @@ export PS1="\$(
   ps1_function
 )"
 
-export PS2='$(
+export PS2="\$(
+  ${eval_code_for_sh}
   ps2_function
-)'
+)"
 
 update_shell_info
 
