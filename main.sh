@@ -310,8 +310,11 @@ alias gpull="git pull"
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
 
-# We need PSTREE_MINUS here to not reset depth level
-alias su='su --whitelist-environment=PS_TREE_MINUS'
+# Not all "su" commands have this option, so we check for that
+if { su --help | grep 'whitelist-environment'; } > /dev/null 2>&1; then
+  # We need PSTREE_MINUS here to not reset depth level
+  alias su='su --whitelist-environment=PS_TREE_MINUS'
+fi
 
 # To use aliases in sudo too we add alias for it with space
 alias sudo="sudo --preserve-env=PS_TREE_MINUS "
