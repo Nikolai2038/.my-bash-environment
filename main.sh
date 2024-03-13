@@ -230,9 +230,6 @@ update_shell_info
 # ========================================
 # Aliases
 # ========================================
-# To use aliases in sudo too
-alias sudo="sudo "
-
 # We use some functions as aliases.
 # But we must unalias functions' names if they exist, because alias has more priority than function.
 
@@ -323,4 +320,10 @@ alias gpull="git pull"
 # Docker aliases
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
+
+# We need PSTREE_MINUS here to not reset depth level
+alias su='su --whitelist-environment=PS_TREE_MINUS'
+
+# To use aliases in sudo too we add alias for it with space
+alias sudo="sudo --preserve-env=PS_TREE_MINUS "
 # ========================================
