@@ -232,7 +232,7 @@ else
 fi
 # ========================================
 
-echo_if_messages "${my_prefix}Welcome, $(get_username)!" >&2
+echo_if_messages "${my_prefix}Welcome, $(whoami)!" >&2
 
 if [ "${N2038_DISABLE_BASH_ENVIRONMENT_CLEAR:-1}" = "0" ]; then
   # We clear only the first shell
