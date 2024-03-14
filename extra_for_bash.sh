@@ -118,7 +118,7 @@ get_seconds_parts() {
 }
 export_function_for_sh get_seconds_parts
 
-echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.1" >&2
+echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.2" >&2
 
 # ========================================
 # Autoupdate
