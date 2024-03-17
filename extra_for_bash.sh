@@ -50,6 +50,9 @@ export HISTFILESIZE=2000
 shopt -s checkwinsize
 # ----------------------------------------
 
+# Ignore case when using TAB completion
+bind "set completion-ignore-case on"
+
 sed_escape() {
   echo "$@" | sed -e 's/[]\/$*.^;|{}()[]/\\&/g' || return "$?"
   return 0
