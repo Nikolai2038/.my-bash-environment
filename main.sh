@@ -66,6 +66,18 @@ export_function_for_sh() {
 }
 export_function_for_sh export_function_for_sh
 
+sed_escape_from() {
+  echo "$@" | sed -e 's/[]\/$*.^;|{}()[]/\\&/g' || return "$?"
+  return 0
+}
+export_function_for_sh sed_escape_from
+
+sed_escape_to() {
+  echo "$@" | sed -e 's/[\/&]/\\&/g' || return "$?"
+  return 0
+}
+export_function_for_sh sed_escape_to
+
 # Prints current shell name
 get_current_shell() {
   echo "$0" | sed -E 's/^(.*[^a-z]+)?([a-z]+)$/\2/' || return "$?"
@@ -208,6 +220,11 @@ export PS2="\$(
   ps2_function
 )"
 
+# Empty function for AltLinux (because "sh" in it still will use "function_to_execute_after_command" from parent bash terminal)
+function_to_execute_after_command() {
+  return 0
+}
+
 CURRENT_SHELL_NAME="$(get_current_shell)"
 if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
   # shellcheck source=./extra_for_bash.sh
@@ -215,6 +232,25 @@ if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
 fi
 
 update_shell_info
+
+# For some reason, "sh" in Alt Linux behaves strangely (partly like "bash", but not fully) - so we fix it here
+# We need sudo rights, so we need to run this function by hand
+fix_alt_linux() {
+  file_path="/etc/bashrc.d/bash_completion.sh"
+  if [ ! -f "${file_path}" ]; then
+    return 0
+  fi
+
+  # shellcheck disable=SC2016
+  line_from='if [ "x${BASH_VERSION-}" != x -a "x${PS1-}" != x -a "x${BASH_COMPLETION_VERSINFO-}" = x ]; then'
+  # shellcheck disable=SC2016
+  line_to='if [ "x${BASH_VERSION-}" != x -a "x${PS1-}" != x -a "x${BASH_COMPLETION_VERSINFO-}" = x ] && echo "$0" | sed -E "s/^(.*[^a-z]+)?([a-z]+)\$/\\2/" | grep bash &> /dev/null; then'
+
+  line_from_escaped="$(sed_escape_from "${line_from}")" || return "$?"
+  line_to_escaped="$(sed_escape_to "${line_to}")" || return "$?"
+
+  ${sudo_prefix}sed -Ei "s/^${line_from_escaped}\$/${line_to_escaped}/" "${file_path}" || return "$?"
+}
 
 # ========================================
 # Aliases

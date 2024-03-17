@@ -51,12 +51,8 @@ shopt -s checkwinsize
 # ----------------------------------------
 
 # Ignore case when using TAB completion
-bind "set completion-ignore-case on"
-
-sed_escape() {
-  echo "$@" | sed -e 's/[]\/$*.^;|{}()[]/\\&/g' || return "$?"
-  return 0
-}
+# Also, we redirect warning "bind: warning: line editing not enabled" to /dev/null because we always execute ".bashrc" in interactive sessions, but AltLinux thinks differently.
+bind "set completion-ignore-case on" 2> /dev/null
 
 export my_prefix=""
 
@@ -130,7 +126,7 @@ echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.2" >&2
 was_autoupdate_failed=0
 was_installation_failed=0
 
-postfix_escaped="$(sed_escape "${N2038_POSTFIX}")"
+postfix_escaped="$(sed_escape_from "${N2038_POSTFIX}")"
 
 using_script_path=""
 # Check if ".bashrc" contains command to source main script
