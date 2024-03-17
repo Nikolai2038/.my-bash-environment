@@ -168,11 +168,14 @@ ps1_function() {
     pstree_part="─[$((PARENTS_COUNT - PS_TREE_MINUS - 1))]"
   fi
 
+  # "get_execution_time" available only for "bash", so we ignore error in "sh"
+  execution_time="$(get_execution_time 2> /dev/null)" || true
+
   # We use env instead of "\"-variables because they do not exist in "sh"
   # ${PWD} = \w
   # ${USER} or ${USERNAME} in MINGW = \u
   # $(hostname) = \h
-  my_echo_en "${C_BORDER}└─$(get_execution_time)[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[$(whoami)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
+  my_echo_en "${C_BORDER}└─${execution_time}[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─[$(whoami)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
 
 ${C_BORDER}┌${pstree_part}─[${C_TEXT}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
 
@@ -187,22 +190,10 @@ ps2_function() {
 }
 export_function_for_sh ps2_function
 
-# Empty function for "sh", but we will override it for "bash"
-get_execution_time() {
-  return 0
-}
-export_function_for_sh get_execution_time
-
 export PS_TREE_MINUS
 # We save parent shell depth
 if [ -z "${PS_TREE_MINUS}" ]; then
   PS_TREE_MINUS="$(get_process_depth)"
-fi
-
-CURRENT_SHELL_NAME="$(get_current_shell)"
-if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
-  # shellcheck source=./extra_for_bash.sh
-  . "${DIRECTORY_WITH_THIS_SCRIPT}/extra_for_bash.sh"
 fi
 
 # shellcheck disable=2089
@@ -216,6 +207,12 @@ export PS2="\$(
   ${eval_code_for_sh}
   ps2_function
 )"
+
+CURRENT_SHELL_NAME="$(get_current_shell)"
+if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
+  # shellcheck source=./extra_for_bash.sh
+  . "${DIRECTORY_WITH_THIS_SCRIPT}/extra_for_bash.sh"
+fi
 
 update_shell_info
 
