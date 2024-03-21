@@ -92,9 +92,8 @@ get_process_depth() {
     return 0
   fi
 
-  # Head to hide sub pipelines.
-  # Remember, that "wc" command also counts.
-  pstree --ascii --long --show-parents --hide-threads --arguments $$ | sed -E '/^[[:blank:]]+`-(sudo .+|su .+|su)$/d' | wc -l || return "$?"
+  # Count all processes, which starts with word "[a-z]*sh" - like "bash", "sh" and others
+  pstree --ascii --long --show-parents --hide-threads --arguments $$ | sed -En '/^[[:blank:]]*`-[a-z]*sh( .*$|$)/p' | wc -l || return "$?"
   return 0
 }
 export_function_for_sh get_process_depth
