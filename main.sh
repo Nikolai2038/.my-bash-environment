@@ -155,7 +155,7 @@ ps1_function() {
 
   git_part=""
   if [ -d .git ]; then
-    git_branch_name="$(git branch 2> /dev/null | cut -d ' ' -f 2)" || git_branch_name=""
+    git_branch_name="$(git branch 2> /dev/null | sed -En 's/^\* (.+)$/\1/p')" || git_branch_name=""
 
     if [ -n "${git_branch_name}" ]; then
       git_part="─${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]"
