@@ -248,6 +248,7 @@ fix_alt_linux() {
   line_from_escaped="$(sed_escape_from "${line_from}")" || return "$?"
   line_to_escaped="$(sed_escape_to "${line_to}")" || return "$?"
 
+  # shellcheck disable=2086
   ${sudo_prefix}sed -Ei "s/^${line_from_escaped}\$/${line_to_escaped}/" "${file_path}" || return "$?"
 }
 
