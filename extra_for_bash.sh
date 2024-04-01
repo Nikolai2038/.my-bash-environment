@@ -53,28 +53,61 @@ shopt -s checkwinsize
 # ----------------------------------------
 # Colors for man pages
 # ----------------------------------------
-export LESS_TERMCAP_mb=$(tput bold; tput setaf 2)
+export LESS_TERMCAP_mb
+LESS_TERMCAP_mb="$(
+  tput bold
+  tput setaf 2
+)"
 
 # Options names
-export LESS_TERMCAP_md=$(tput bold; tput setaf 2)
+export LESS_TERMCAP_md
+LESS_TERMCAP_md="$(
+  tput bold
+  tput setaf 2
+)"
 
-export LESS_TERMCAP_me=$(tput sgr0)
+export LESS_TERMCAP_me
+LESS_TERMCAP_me="$(tput sgr0)"
 
 # Footer and search selections
-export LESS_TERMCAP_so=$(tput bold; tput setaf 7; tput setab 4)
+export LESS_TERMCAP_so
+LESS_TERMCAP_so="$(
+  tput bold
+  tput setaf 7
+  tput setab 4
+)"
 
-export LESS_TERMCAP_se=$(tput rmso; tput sgr0)
+export LESS_TERMCAP_se
+LESS_TERMCAP_se="$(
+  tput rmso
+  tput sgr0
+)"
 
 # Options values
-export LESS_TERMCAP_us=$(tput smul; tput bold; tput setaf 4)
+export LESS_TERMCAP_us
+LESS_TERMCAP_us="$(
+  tput smul
+  tput bold
+  tput setaf 4
+)"
 
-export LESS_TERMCAP_ue=$(tput rmul; tput sgr0)
-export LESS_TERMCAP_mr=$(tput rev)
-export LESS_TERMCAP_mh=$(tput dim)
-export LESS_TERMCAP_ZN=$(tput ssubm)
-export LESS_TERMCAP_ZV=$(tput rsubm)
-export LESS_TERMCAP_ZO=$(tput ssupm)
-export LESS_TERMCAP_ZW=$(tput rsupm)
+export LESS_TERMCAP_ue
+LESS_TERMCAP_ue="$(
+  tput rmul
+  tput sgr0
+)"
+export LESS_TERMCAP_mr
+LESS_TERMCAP_mr="$(tput rev)"
+export LESS_TERMCAP_mh
+LESS_TERMCAP_mh="$(tput dim)"
+export LESS_TERMCAP_ZN
+LESS_TERMCAP_ZN="$(tput ssubm)"
+export LESS_TERMCAP_ZV
+LESS_TERMCAP_ZV="$(tput rsubm)"
+export LESS_TERMCAP_ZO
+LESS_TERMCAP_ZO="$(tput ssupm)"
+export LESS_TERMCAP_ZW
+LESS_TERMCAP_ZW="$(tput rsupm)"
 
 # For Konsole and Gnome-terminal
 export GROFF_NO_SGR=1
@@ -118,11 +151,6 @@ get_execution_time() {
   local timestamp_end_seconds_parts
   timestamp_end_seconds_parts="$(get_seconds_parts)"
   local seconds_parts="$((timestamp_end_seconds_parts - timestamp_start_seconds_parts))"
-
-  # DEBUG:
-  # echo "timestamp_end_seconds_parts: ${timestamp_end_seconds_parts}" >&2
-  # echo "timestamp_start_seconds_parts: ${timestamp_start_seconds_parts}" >&2
-  # echo "seconds_parts: ${seconds_parts}" >&2
 
   local seconds="$((seconds_parts / accuracy_tens))"
   local milliseconds="$((seconds_parts - seconds * accuracy_tens))"
