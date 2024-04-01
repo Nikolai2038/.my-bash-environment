@@ -186,10 +186,10 @@ ps1_function() {
   # ${PWD} = \w
   # ${USER} or ${USERNAME} in MINGW = \u
   # $(hostname) = \h
-  my_echo_en "${C_BORDER}└┬─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─${execution_time}[$(date +'%Y-%m-%d]─[%a]─[%H:%M:%S')]${C_RESET}
- ${C_BORDER}└─[$(whoami)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
+  my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─${execution_time}[$(date +'%Y-%m-%d]─[%a]─[%H:%M:%S')]${C_RESET}
 
-${C_BORDER}┌─${pstree_part}─[${C_TEXT}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌─[$(whoami)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
+${C_BORDER}├${pstree_part}─[${C_TEXT}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }
