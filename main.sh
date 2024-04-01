@@ -345,6 +345,11 @@ alias gpull="git pull"
 # Docker aliases
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
+alias dc='docker-compose'
+alias dcu='docker-compose up -d'
+alias dcd='docker-compose down'
+alias dcb='docker-compose build'
+alias dcbdu='dcb && dcd && dcu'
 
 # Not all "su" commands have this option, so we check for that
 if { su --help | grep 'whitelist-environment'; } > /dev/null 2>&1; then
