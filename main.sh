@@ -156,12 +156,15 @@ ps1_function() {
   git_part=""
   if [ -d .git ]; then
     git_branch_name="$(git branch 2> /dev/null | sed -En 's/^\* (.+)$/\1/p')" || git_branch_name=""
+    if [ -z "${git_branch_name}" ]; then
+      # When cloned empty repository
+      git_branch_name="$(git status | sed -En 's/^On branch (.+)$/\1/p')"
+    fi
 
     if [ -n "${git_branch_name}" ]; then
       git_part="─${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]"
-    elif git status > /dev/null 2>&1; then
-      # TODO: Обработка статуса, когда ветка неизвестна, но репозиторий есть
-      git_part="─${C_BORDER}[${C_TEXT}???${C_BORDER}]"
+    else
+      git_part="─${C_BORDER}[${C_ERROR}???${C_BORDER}]"
     fi
   fi
 
