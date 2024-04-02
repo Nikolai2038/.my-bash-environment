@@ -154,17 +154,32 @@ ps1_function() {
   fi
 
   git_part=""
-  if [ -d .git ]; then
+  if git status > /dev/null 2>&1; then
+    git_part="
+├─"
+
     git_branch_name="$(git branch 2> /dev/null | sed -En 's/^\* (.+)$/\1/p')" || git_branch_name=""
     if [ -z "${git_branch_name}" ]; then
       # When cloned empty repository
       git_branch_name="$(git status | sed -En 's/^On branch (.+)$/\1/p')"
     fi
 
+    parent_repository="$(git rev-parse --show-superproject-working-tree)"
+    # If is submodule
+    if [ -n "${parent_repository}" ]; then
+      parent_git_branch_name="$(git -C "${parent_repository}" branch 2> /dev/null | sed -En 's/^\* (.+)$/\1/p')" || git_branch_name=""
+
+      if [ -n "${parent_git_branch_name}" ]; then
+        git_part="${git_part}${C_BORDER}[${C_TEXT}${parent_git_branch_name}${C_BORDER}]─[submodule]─"
+      else
+        git_part="${git_part}${C_BORDER}[${C_ERROR}???${C_BORDER}]─[submodule]─"
+      fi
+    fi
+
     if [ -n "${git_branch_name}" ]; then
-      git_part="─${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]"
+      git_part="${git_part}${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]"
     else
-      git_part="─${C_BORDER}[${C_ERROR}???${C_BORDER}]"
+      git_part="${git_part}${C_BORDER}[${C_ERROR}???${C_BORDER}]"
     fi
   fi
 
