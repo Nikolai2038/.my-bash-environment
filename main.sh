@@ -354,12 +354,15 @@ ar() {
 
 # GIT aliases
 alias gs="git status"
-alias gl="git log --pretty=oneline"
+alias gl="git log --graph --oneline --decorate"
 alias ga="git add ."
 alias gc="git commit -m"
 alias gac="ga && gc"
 alias gpush="git push"
 alias gpull="git pull"
+
+# TODO: Maybe apply that?
+# git config --global core.quotepath false
 
 # Docker aliases
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
