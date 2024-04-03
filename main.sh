@@ -373,6 +373,9 @@ alias dcd='docker-compose down'
 alias dcb='docker-compose build'
 alias dcbdu='dcb && dcd && dcu'
 
+# Other aliases
+alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
+
 # Not all "su" commands have this option, so we check for that
 if { su --help | grep 'whitelist-environment'; } > /dev/null 2>&1; then
   # We need PSTREE_MINUS here to not reset depth level
