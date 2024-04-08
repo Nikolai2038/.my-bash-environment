@@ -361,8 +361,10 @@ alias gac="ga && gc"
 alias gpush="git push"
 alias gpull="git pull"
 
-# TODO: Maybe apply that?
-# git config --global core.quotepath false
+if git --help > /dev/null 2>&1; then
+  # Do not encode symbols in "git status" (russian letters, for example)
+  git config --global core.quotepath false
+fi
 
 # Docker aliases
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
@@ -373,8 +375,13 @@ alias dcd='docker-compose down'
 alias dcb='docker-compose build'
 alias dcbdu='dcb && dcd && dcu'
 
-# Other aliases
+# journalctl
 alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
+
+# "bat" is colorized "cat", so we use it, if it is installed
+if bat --help > /dev/null 2>&1; then
+  alias cat="bat --style='plain' --paging=never --theme='Visual Studio Dark+'"
+fi
 
 # Not all "su" commands have this option, so we check for that
 if { su --help | grep 'whitelist-environment'; } > /dev/null 2>&1; then

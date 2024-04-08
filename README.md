@@ -10,13 +10,28 @@ My configs to easily download and use on new machines.
    sudo apt-get update && sudo apt-get install -y curl git psmisc
    ```
 
-2. Execute:
+2. Extra functional:
+
+   ```bash
+   sudo apt-get update && sudo apt-get install -y pstree bat
+   ```
+
+3. Execute:
 
     ```bash
    git clone https://github.com/Nikolai2038/.my-bash-environment.git && \
    rm -rf ./.my-bash-environment/.git && \
    source ./.my-bash-environment/main.sh
     ```
+
+One-command:
+
+```bash
+sudo apt-get update && sudo apt-get install -y curl git psmisc pstree bat && \
+git clone https://github.com/Nikolai2038/.my-bash-environment.git && \
+rm -rf ./.my-bash-environment/.git && \
+source ./.my-bash-environment/main.sh
+```
 
 ## Update
 
