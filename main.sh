@@ -373,6 +373,8 @@ alias dc='docker-compose'
 alias dcu='docker-compose up -d'
 alias dcd='docker-compose down'
 alias dcb='docker-compose build'
+alias dcbu='dcb && dcu'
+alias dcdu='dcd && dcu'
 alias dcbdu='dcb && dcd && dcu'
 
 # journalctl
