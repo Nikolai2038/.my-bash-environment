@@ -7,13 +7,13 @@ My configs to easily download and use on new machines.
 1. Make sure `curl` and `git` are installed. Also, if you want to see terminal depth, install `psmisc` for `pstree` command:
 
    ```bash
-   sudo apt-get update && sudo apt-get install -y curl git psmisc
+   sudo apt-get update && sudo apt-get install -y curl git
    ```
 
 2. Extra functional:
 
    ```bash
-   sudo apt-get update && sudo apt-get install -y pstree bat
+   sudo apt-get update && sudo apt-get install -y psmisc bat
    ```
 
 3. Execute:
@@ -27,7 +27,7 @@ My configs to easily download and use on new machines.
 One-command:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y curl git psmisc pstree bat && \
+sudo apt-get update && sudo apt-get install -y curl git psmisc bat && \
 git clone https://github.com/Nikolai2038/.my-bash-environment.git && \
 rm -rf ./.my-bash-environment/.git && \
 source ./.my-bash-environment/main.sh
