@@ -7,7 +7,7 @@ export EDITOR=vim
 
 # We need "\[" and "\]" to help bash understand, that it is colors (otherwise bash will break when we navigate in commands history).
 # But we add them in get_function_definition_with_colors_replaced.
-export _C_TEXT="\033[38;5;02m"
+export _C_TEXT="\033[38;5;15m"
 export _C_ERROR="\033[38;5;01m"
 export _C_SUCCESS="\033[38;5;02m"
 export _C_BORDER_USUAL="\033[38;5;27m"
@@ -170,14 +170,14 @@ ps1_function() {
       parent_git_branch_name="$(git -C "${parent_repository}" branch 2> /dev/null | sed -En 's/^\* (.+)$/\1/p')" || git_branch_name=""
 
       if [ -n "${parent_git_branch_name}" ]; then
-        git_part="${git_part}${C_BORDER}[${C_TEXT}${parent_git_branch_name}${C_BORDER}]─[submodule]─"
+        git_part="${git_part}${C_BORDER}[${C_SUCCESS}${parent_git_branch_name}${C_BORDER}]─[submodule]─"
       else
         git_part="${git_part}${C_BORDER}[${C_ERROR}???${C_BORDER}]─[submodule]─"
       fi
     fi
 
     if [ -n "${git_branch_name}" ]; then
-      git_part="${git_part}${C_BORDER}[${C_TEXT}${git_branch_name}${C_BORDER}]"
+      git_part="${git_part}${C_BORDER}[${C_SUCCESS}${git_branch_name}${C_BORDER}]"
     else
       git_part="${git_part}${C_BORDER}[${C_ERROR}???${C_BORDER}]"
     fi
@@ -206,8 +206,8 @@ ps1_function() {
   # $(hostname) = \h
   my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─${execution_time}[$(date +'%Y-%m-%d]─[%a]─[%H:%M:%S')]${C_RESET}
 
-${C_BORDER}┌─[$(whoami)@$(hostname):${C_TEXT}${PWD}${C_BORDER}]${git_part}${C_RESET}
-${C_BORDER}├${pstree_part}─[${C_TEXT}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌─[$(whoami)@$(hostname):${C_SUCCESS}${PWD}${C_BORDER}]${git_part}${C_RESET}
+${C_BORDER}├${pstree_part}─[${C_SUCCESS}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
 }
@@ -376,6 +376,12 @@ alias dcb='docker-compose build'
 alias dcbu='dcb && dcu'
 alias dcdu='dcd && dcu'
 alias dcbdu='dcb && dcd && dcu'
+unalias di > /dev/null 2>&1
+di() {
+  info=$(docker image list --format "${_C_SUCCESS}{{.Repository}}${_C_TEXT}:${_C_BORDER_USUAL}{{.Tag}}${_C_TEXT} ({{.Size}})${_C_RESET}" --filter "dangling=false" | grep -v '<none>' | sort)
+  my_echo_en "${info}" | less -R
+  return 0
+}
 
 # journalctl
 alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
