@@ -273,6 +273,7 @@ fix_alt_linux() {
 
 # ========================================
 # Aliases
+# TODO: Make them work in inner "sh"
 # ========================================
 # We use some functions as aliases.
 # But we must unalias functions' names if they exist, because alias has more priority than function.
@@ -370,9 +371,9 @@ fi
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
 alias dc='docker-compose'
-alias dcu='docker-compose up -d'
+alias dcu='docker-compose up --detach'
 alias dcd='docker-compose down'
-alias dcb='docker-compose build'
+alias dcb='docker-compose build --pull'
 alias dcbu='dcb && dcu'
 alias dcdu='dcd && dcu'
 alias dcbdu='dcb && dcd && dcu'
