@@ -207,6 +207,14 @@ source \"${using_script_path}\" ${N2038_POSTFIX}" >> "${BASHRC_FILE}" || was_ins
 fi
 
 check_connection() {
+  # Check curl for format error in "--max-time"
+  curl --fail --silent --show-error null --max-time "${CHECK_CONNECTION_TIMEOUT}" &> /dev/null
+  local error_code="$?"
+  # If format error - replace '.' with ',' - old versions of "curl" use that
+  if [ "${error_code}" = "2" ]; then
+    CHECK_CONNECTION_TIMEOUT="${CHECK_CONNECTION_TIMEOUT//'.'/','}"
+  fi
+
   curl --fail --silent --show-error --max-time "${CHECK_CONNECTION_TIMEOUT}" https://github.com/Nikolai2038/.my-bash-environment.git > /dev/null
   return "$?"
 }
