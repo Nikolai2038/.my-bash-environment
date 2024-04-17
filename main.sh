@@ -371,7 +371,7 @@ fi
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
 alias dc='docker-compose'
-alias dcu='docker-compose up --detach'
+alias dcu='docker-compose up --detach --wait'
 alias dcd='docker-compose down'
 alias dcb='docker-compose build'
 alias dcbu='dcb && dcu'
