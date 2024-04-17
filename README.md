@@ -19,18 +19,18 @@ My configs to easily download and use on new machines.
 3. Execute:
 
     ```bash
-   git clone https://github.com/Nikolai2038/.my-bash-environment.git && \
-   rm -rf ./.my-bash-environment/.git && \
-   source ./.my-bash-environment/main.sh
+   git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
+   rm -rf "${HOME}/.my-bash-environment/.git" && \
+   source "${HOME}/.my-bash-environment/main.sh"
     ```
 
 One-command:
 
 ```bash
 sudo apt-get update && sudo apt-get install -y curl git psmisc bat && \
-git clone https://github.com/Nikolai2038/.my-bash-environment.git && \
-rm -rf ./.my-bash-environment/.git && \
-source ./.my-bash-environment/main.sh
+git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
+rm -rf "${HOME}/.my-bash-environment/.git" && \
+source "${HOME}/.my-bash-environment/main.sh"
 ```
 
 ## Update
