@@ -94,7 +94,7 @@ get_process_depth() {
 
   # "--hide-threads" is not present in some old versions of "pstree"
   hide_threads_arg=""
-  if pstree --hide-threads 2> /dev/null; then
+  if pstree --hide-threads > /dev/null 2>&1; then
     hide_threads_arg="--hide-threads"
   fi
 
