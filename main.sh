@@ -92,8 +92,14 @@ get_process_depth() {
     return 0
   fi
 
+  # "--hide-threads" is not present in some old versions of "pstree"
+  hide_threads_arg=""
+  if pstree --hide-threads 2> /dev/null; then
+    hide_threads_arg="--hide-threads"
+  fi
+
   # Count all processes, which starts with word "[a-z]*sh" - like "bash", "sh" and others
-  pstree --ascii --long --show-parents --hide-threads --arguments $$ | sed -En '/^[[:blank:]]*`-[a-z]*sh( .*$|$)/p' | wc -l || return "$?"
+  pstree --ascii --long --show-parents ${hide_threads_arg} --arguments $$ | sed -En '/^[[:blank:]]*`-[a-z]*sh( .*$|$)/p' | wc -l || return "$?"
   return 0
 }
 export_function_for_sh get_process_depth
