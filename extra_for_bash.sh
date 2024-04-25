@@ -4,10 +4,14 @@
 # Settings
 # ----------------------------------------
 # From 1 to 9 - The number of decimals for the command execution time
-export accuracy=2
+if [ -z "${accuracy}" ]; then
+  export accuracy=0.3
+fi
 
 # Connection timeout for checking internet connection before autoupdate
-export CHECK_CONNECTION_TIMEOUT=0.3
+if [ -z "${CHECK_CONNECTION_TIMEOUT}" ]; then
+  export CHECK_CONNECTION_TIMEOUT=0.3
+fi
 
 # Directory with scripts
 DIRECTORY_WITH_SCRIPTS="${HOME}/.my-bash-environment"
