@@ -361,6 +361,9 @@ ar() {
 
 # GIT aliases
 alias gs="git status"
+# TODO: In development
+# git log --graph --pretty=format:"%Cgreen%h %Cblue%an %Cgreen%ad %Creset%s %S" --date=format:"%Y-%m-%d %H:%M:%S"
+# git log --pretty=format:"%h%x09%an%x09%ad%x09%s"
 alias gl="git log --graph --oneline --decorate"
 alias ga="git add ."
 alias gc="git commit -m"
@@ -382,6 +385,7 @@ alias dcd='docker-compose down'
 alias dcb='docker-compose build'
 alias dcs='docker-compose stop'
 alias dcbu='dcb && dcu'
+alias dcbd='dcb && dcd'
 alias dcdu='dcd && dcu'
 alias dcbdu='dcb && dcd && dcu'
 unalias di > /dev/null 2>&1
