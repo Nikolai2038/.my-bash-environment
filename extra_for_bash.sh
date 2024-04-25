@@ -5,7 +5,7 @@
 # ----------------------------------------
 # From 1 to 9 - The number of decimals for the command execution time
 if [ -z "${accuracy}" ]; then
-  export accuracy=0.3
+  export accuracy=2
 fi
 
 # Connection timeout for checking internet connection before autoupdate
