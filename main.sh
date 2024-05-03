@@ -371,9 +371,18 @@ alias gac="ga && gc"
 alias gpush="git push"
 alias gpull="git pull"
 
+# Various git settings
 if git --help > /dev/null 2>&1; then
   # Do not encode symbols in "git status" (russian letters, for example)
   git config --global core.quotepath false
+
+  # Always use merge when pulling other changes
+  git config --global pull.rebase false
+
+  # Unset author info - you need to set it directly in each repo
+  # (this is because I use different accounts and don't wanna be messed up)
+  git config --global --unset user.name
+  git config --global --unset user.email
 fi
 
 # Docker aliases
