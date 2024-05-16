@@ -10,7 +10,7 @@ fi
 
 # Connection timeout for checking internet connection before autoupdate
 if [ -z "${CHECK_CONNECTION_TIMEOUT}" ]; then
-  export CHECK_CONNECTION_TIMEOUT=0.3
+  export CHECK_CONNECTION_TIMEOUT=0.5
 fi
 
 # Directory with scripts
