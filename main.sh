@@ -160,7 +160,8 @@ ps1_function() {
   fi
 
   git_part=""
-  if git status > /dev/null 2>&1; then
+  # If we are in GIT repository
+  if [ -f ".git/config" ]; then
     git_part="
 ├─"
 
