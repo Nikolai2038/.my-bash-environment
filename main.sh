@@ -422,7 +422,12 @@ di() {
 # journalctl
 alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
 
-# "bat" is colorized "cat", so we use it, if it is installed
+# Binary can be called "batcat"
+if { { ! bat --help; } && batcat --help; } > /dev/null 2>&1; then
+  alias bat="batcat"
+fi
+
+# "bat" is colorized "cat", so we use it, if it is installed.
 if bat --help > /dev/null 2>&1; then
   alias cat="bat --style='plain' --paging=never --theme='Visual Studio Dark+'"
 fi
