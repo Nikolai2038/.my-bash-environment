@@ -278,6 +278,20 @@ fix_alt_linux() {
   ${sudo_prefix}sed -Ei "s/^${line_from_escaped}\$/${line_to_escaped}/" "${file_path}" || return "$?"
 }
 
+# Various git settings
+if git --help > /dev/null 2>&1; then
+  # Do not encode symbols in "git status" (russian letters, for example)
+  git config --global core.quotepath false
+
+  # Always use merge when pulling other changes
+  git config --global pull.rebase false
+
+  # Unset author info - you need to set it directly in each repo
+  # (this is because I use different accounts and don't wanna be messed up)
+  git config --global --unset user.name
+  git config --global --unset user.email
+fi
+
 # ========================================
 # Aliases
 # TODO: Make them work in inner "sh"
@@ -336,9 +350,15 @@ EOF
   return 0
 }
 
+# ----------------------------------------
 # APT aliases
-# (This is not working in this script, so we still use "apt-get" everywhere here)
-alias apt="apt-get"
+# ----------------------------------------
+# If "apt" is not installed - we create alias for it to "apt-get"
+if ! apt --help > /dev/null 2>&1; then
+  # (This is not working in this script, so we still use "apt-get" everywhere here)
+  alias apt="apt-get"
+fi
+
 # shellcheck disable=2139
 alias au="${sudo_prefix}apt-get update && ${sudo_prefix}apt-get dist-upgrade -y && ${sudo_prefix}apt-get autoremove -y"
 unalias ai > /dev/null 2>&1
@@ -359,8 +379,11 @@ ar() {
   ${sudo_prefix}apt-get autoremove -y || return "$?"
   return 0
 }
+# ----------------------------------------
 
+# ----------------------------------------
 # GIT aliases
+# ----------------------------------------
 alias gs="git status"
 # TODO: In development
 # git log --graph --pretty=format:"%Cgreen%h %Cblue%an %Cgreen%ad %Creset%s %S" --date=format:"%Y-%m-%d %H:%M:%S"
@@ -371,22 +394,11 @@ alias gc="git commit -m"
 alias gac="ga && gc"
 alias gpush="git push"
 alias gpull="git pull"
+# ----------------------------------------
 
-# Various git settings
-if git --help > /dev/null 2>&1; then
-  # Do not encode symbols in "git status" (russian letters, for example)
-  git config --global core.quotepath false
-
-  # Always use merge when pulling other changes
-  git config --global pull.rebase false
-
-  # Unset author info - you need to set it directly in each repo
-  # (this is because I use different accounts and don't wanna be messed up)
-  git config --global --unset user.name
-  git config --global --unset user.email
-fi
-
+# ----------------------------------------
 # Docker aliases
+# ----------------------------------------
 alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
 alias dpsa='dps --all'
 alias dc='docker-compose'
@@ -418,6 +430,7 @@ di() {
   my_echo_en "${info}" | less -R
   return 0
 }
+# ----------------------------------------
 
 # journalctl
 alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
