@@ -292,6 +292,13 @@ if git --help > /dev/null 2>&1; then
   git config --global --unset user.email
 fi
 
+# Colorful less
+if source-highlight --help > /dev/null 2>&1; then
+  lesspipe_script="$(find /usr -name 'src-hilite-lesspipe.sh' -type f -executable 2> /dev/null | head -n 1)"
+  export LESSOPEN="| ${lesspipe_script} %s"
+  export LESS=' -R '
+fi
+
 # ========================================
 # Aliases
 # TODO: Make them work in inner "sh"
