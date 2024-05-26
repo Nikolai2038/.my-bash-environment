@@ -10,27 +10,57 @@ My CLI configs to easily download and use on new machines.
 
 ### 2.1. One command
 
-```bash
-sudo apt-get update && sudo apt-get install -y curl git psmisc bat source-highlight && \
-if [ -d "${HOME}/.my-bash-environment" ]; then rm -rf "${HOME}/.my-bash-environment"; fi && \
-git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
-rm -rf "${HOME}/.my-bash-environment/.git" && \
-source "${HOME}/.my-bash-environment/main.sh"
-```
+- Debian-based:
+   
+   ```bash
+   sudo apt-get update && sudo apt-get install -y curl git psmisc bat source-highlight && \
+   if [ -d "${HOME}/.my-bash-environment" ]; then rm -rf "${HOME}/.my-bash-environment"; fi && \
+   git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
+   rm -rf "${HOME}/.my-bash-environment/.git" && \
+   source "${HOME}/.my-bash-environment/main.sh"
+   ```
+
+- Arch-based:
+
+   ```bash
+   sudo pacman -Sy --noconfirm --needed curl git psmisc bat source-highlight && \
+   if [ -d "${HOME}/.my-bash-environment" ]; then rm -rf "${HOME}/.my-bash-environment"; fi && \
+   git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
+   rm -rf "${HOME}/.my-bash-environment/.git" && \
+   source "${HOME}/.my-bash-environment/main.sh"
+   ```
 
 ### 2.2. Step by step
 
 1. Make sure `curl` and `git` are installed:
 
-   ```bash
-   sudo apt-get update && sudo apt-get install -y curl git
-   ```
+   - Debian-based:
+
+      ```bash
+      sudo apt-get update && sudo apt-get install -y curl git
+      ```
+
+   - Arch-based:
+
+      ```bash
+      sudo pacman -Sy --noconfirm --needed curl git
+      ```
 
 2. (Optional) Install packages for extra functional:
 
-   ```bash
-   sudo apt-get update && sudo apt-get install -y psmisc bat source-highlight
-   ```
+   - Debian-based:
+   
+      ```bash
+      sudo apt-get update && sudo apt-get install -y psmisc bat source-highlight
+      ```
+
+   - Arch-based:
+
+      ```bash
+      sudo pacman -Sy --noconfirm --needed psmisc bat source-highlight
+      ```
+
+   Descriptions:
 
     - `psmisc` for `pstree` command - to show terminal depth;
     - `bat` for `bat`/`batcat` command - colorized `cat`;
