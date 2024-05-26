@@ -377,8 +377,11 @@ if ! apt --help > /dev/null 2>&1; then
   alias apt="apt-get"
 fi
 
+# Update packages
 # shellcheck disable=2139
 alias au="${sudo_prefix}apt-get update && ${sudo_prefix}apt-get dist-upgrade -y && ${sudo_prefix}apt-get autoremove -y"
+
+# Install packages
 unalias ai > /dev/null 2>&1
 ai() {
   # shellcheck disable=2086
@@ -389,6 +392,8 @@ ai() {
   ${sudo_prefix}apt-get autoremove -y || return "$?"
   return 0
 }
+
+# Remove packages
 unalias ar > /dev/null 2>&1
 ar() {
   # shellcheck disable=2086
@@ -397,6 +402,23 @@ ar() {
   ${sudo_prefix}apt-get autoremove -y || return "$?"
   return 0
 }
+# ----------------------------------------
+
+# ----------------------------------------
+# Pacman aliases
+# ----------------------------------------
+# Update packages
+# shellcheck disable=2139
+alias pu="${sudo_prefix}pacman -Syy"
+
+# Install packages
+# shellcheck disable=2139
+alias pi="${sudo_prefix}pacman -Sy --noconfirm --needed"
+
+# Remove packages
+# "pr" command exists (convert text files for printing), but I don't use it.
+# shellcheck disable=2139
+alias pr="${sudo_prefix}pacman -Runs --noconfirm"
 # ----------------------------------------
 
 # ----------------------------------------
