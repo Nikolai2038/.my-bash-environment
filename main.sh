@@ -209,9 +209,9 @@ ps1_function() {
 
   # There is warning about HOSTNAME being undefined in POSIX "sh", so just in case, we use "hostname" command to get it, if it is installed.
   # If it is not installed, then there is no much we can do.
+  # "hostname" command is used in WSL, where is no $HOSTNAME, but we can still get Windows hostname.
   if [ -z "${HOSTNAME}" ]; then
-    export HOSTNAME
-    if hostname --help > /dev/null 2>&1; then
+    if hostname --version > /dev/null 2>&1; then
       HOSTNAME="$(hostname)"
     else
       HOSTNAME="${C_ERROR}unknown${C_BORDER}"
