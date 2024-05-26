@@ -207,13 +207,24 @@ ps1_function() {
   # "get_execution_time" available only for "bash", so we ignore error in "sh"
   execution_time="$(get_execution_time 2> /dev/null)" || true
 
+  # There is warning about HOSTNAME being undefined in POSIX "sh", so just in case, we use "hostname" command to get it, if it is installed.
+  # If it is not installed, then there is no much we can do.
+  if [ -z "${HOSTNAME}" ]; then
+    export HOSTNAME
+    if hostname --help > /dev/null 2>&1; then
+      HOSTNAME="$(hostname)"
+    else
+      HOSTNAME="${C_ERROR}unknown${C_BORDER}"
+    fi
+  fi
+
   # We use env instead of "\"-variables because they do not exist in "sh"
   # ${PWD} = \w
   # ${USER} or ${USERNAME} in MINGW = \u
-  # $(hostname) = \h
+  # ${HOSTNAME} = \h
   my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─${execution_time}[$(date +'%Y-%m-%d]─[%a]─[%H:%M:%S')]${C_RESET}
 
-${C_BORDER}┌─[$(whoami)@$(hostname):${C_SUCCESS}${PWD}${C_BORDER}]${git_part}${C_RESET}
+${C_BORDER}┌─[$(whoami)@${HOSTNAME}:${C_SUCCESS}${PWD}${C_BORDER}]${git_part}${C_RESET}
 ${C_BORDER}├${pstree_part}─[${C_SUCCESS}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
 
   return 0
