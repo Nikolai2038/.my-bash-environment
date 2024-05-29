@@ -182,7 +182,6 @@ export_function_for_sh get_seconds_parts
 # ----------------------------------------
 # Snapper aliases
 # ----------------------------------------
-unalias n2038_snapper_create_snapshots_for_all_configs > /dev/null 2>&1
 # Creates snapshots for all Snapper configs
 n2038_snapper_create_snapshots_for_all_configs() {
   local info="${1}" && { shift || true; }
@@ -208,7 +207,6 @@ n2038_snapper_create_snapshots_for_all_configs() {
   return 0
 }
 
-unalias n2038_snapper_create_snapshots_for_main_configs > /dev/null 2>&1
 # Creates snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 n2038_snapper_create_snapshots_for_main_configs() {
   local info="${1}" && { shift || true; }

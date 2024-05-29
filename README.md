@@ -94,13 +94,13 @@ n2038_snapper_list_configs
 #### 4.1.2. Print a list of snapshots of specified Snapper config
 
 ```bash
-n2038_snapper_list_snapshots
+n2038_snapper_list_snapshots <config>
 ```
 
 #### 4.1.3. Creates a snapshots with specified comment for specified Snapper config
 
 ```bash
-n2038_snapper_create_snapshot <info (description)>
+n2038_snapper_create_snapshot <config> <info (description)>
 ```
 
 #### 4.1.4. Creates snapshots for all Snapper configs
@@ -113,6 +113,12 @@ n2038_snapper_create_snapshots_for_all_configs <info (description)>
 
 ```bash
 n2038_snapper_create_snapshots_for_main_configs <info (description)>
+```
+
+#### 4.1.6. Delete a snapshot with specified ID for specified Snapper config
+
+```bash
+n2038_snapper_delete_snapshot <config> <snapshot_id>
 ```
 
 ## 4. Settings

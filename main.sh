@@ -479,14 +479,12 @@ if [ -z "${SNAPPER_DESCRIPTION_KEYWORD}" ]; then
   SNAPPER_DESCRIPTION_KEYWORD="nikolai2038"
 fi
 
-unalias n2038_snapper_list > /dev/null 2>&1
 # Print a list of existing Snapper configs
 n2038_snapper_list_configs() {
   ll /etc/snapper/configs
   return 0
 }
 
-unalias n2038_snapper_list > /dev/null 2>&1
 # Print a list of snapshots of specified Snapper config
 n2038_snapper_list_snapshots() {
   config="${1}" && { shift || true; }
@@ -495,11 +493,12 @@ n2038_snapper_list_snapshots() {
     return 1
   fi
 
-  sudo snapper -c "${config}" --iso list --columns number,type,cleanup,date,description,userdata
+  # shellcheck disable=SC2086
+  ${sudo_prefix}snapper -c "${config}" --iso list --columns number,type,cleanup,date,description,userdata
+
   return 0
 }
 
-unalias n2038_snapper_list > /dev/null 2>&1
 # Creates a snapshots with specified comment for specified Snapper config
 n2038_snapper_create_snapshot() {
   config="${1}" && { shift || true; }
@@ -509,7 +508,24 @@ n2038_snapper_create_snapshot() {
     return 1
   fi
 
-  sudo snapper -c "${config}" create --description "${SNAPPER_DESCRIPTION_KEYWORD}" --userdata "info='${info}'" || return "$?"
+  # shellcheck disable=SC2086
+  ${sudo_prefix}snapper -c "${config}" create --description "${SNAPPER_DESCRIPTION_KEYWORD}" --userdata "info='${info}'"
+
+  return 0
+}
+
+# Delete a snapshot with specified ID for specified Snapper config
+n2038_snapper_delete_snapshot() {
+  config="${1}" && { shift || true; }
+  snapshot_id="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${snapshot_id}" ]; then
+    echo "Usage: n2038_snapper_delete_snapshot <config name> <snapshot_id>" >&2
+    return 1
+  fi
+
+  # shellcheck disable=SC2086
+  ${sudo_prefix}snapper -c "${config}" delete "${snapshot_id}"
+
   return 0
 }
 # ----------------------------------------
