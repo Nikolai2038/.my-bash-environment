@@ -81,6 +81,40 @@ Script will autoupdate itself. You can disable it via env-variables (see below).
 
 You can also just run installation above to update by hand.
 
+## 4. Aliases (in work)
+
+### 4.1. Snapper
+
+#### 4.1.1. Print a list of existing Snapper configs
+
+```bash
+n2038_snapper_list_configs
+```
+
+#### 4.1.2. Print a list of snapshots of specified Snapper config
+
+```bash
+n2038_snapper_list_snapshots
+```
+
+#### 4.1.3. Creates a snapshots with specified comment for specified Snapper config
+
+```bash
+n2038_snapper_create_snapshot <info (description)>
+```
+
+#### 4.1.4. Creates snapshots for all Snapper configs
+
+```bash
+n2038_snapper_create_snapshots_for_all_configs <info (description)>
+```
+
+#### 4.1.5. Creates snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
+
+```bash
+n2038_snapper_create_snapshots_for_main_configs <info (description)>
+```
+
 ## 4. Settings
 
 You can change script's behaviour via env-variables:

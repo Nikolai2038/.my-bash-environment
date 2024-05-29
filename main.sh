@@ -472,6 +472,48 @@ di() {
 }
 # ----------------------------------------
 
+# ----------------------------------------
+# Snapper aliases
+# ----------------------------------------
+if [ -z "${SNAPPER_DESCRIPTION_KEYWORD}" ]; then
+  SNAPPER_DESCRIPTION_KEYWORD="nikolai2038"
+fi
+
+unalias n2038_snapper_list > /dev/null 2>&1
+# Print a list of existing Snapper configs
+n2038_snapper_list_configs() {
+  ll /etc/snapper/configs
+  return 0
+}
+
+unalias n2038_snapper_list > /dev/null 2>&1
+# Print a list of snapshots of specified Snapper config
+n2038_snapper_list_snapshots() {
+  config="${1}" && { shift || true; }
+  if [ -z "${config}" ]; then
+    echo "Usage: n2038_snapper_list_snapshots <config name>" >&2
+    return 1
+  fi
+
+  sudo snapper -c "${config}" --iso list --columns number,type,cleanup,date,description,userdata
+  return 0
+}
+
+unalias n2038_snapper_list > /dev/null 2>&1
+# Creates a snapshots with specified comment for specified Snapper config
+n2038_snapper_create_snapshot() {
+  config="${1}" && { shift || true; }
+  info="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${info}" ]; then
+    echo "Usage: n2038_snapper_create_snapshot <config name> <info (description)>" >&2
+    return 1
+  fi
+
+  sudo snapper -c "${config}" create --description "${SNAPPER_DESCRIPTION_KEYWORD}" --userdata "info='${info}'" || return "$?"
+  return 0
+}
+# ----------------------------------------
+
 # journalctl
 alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
 

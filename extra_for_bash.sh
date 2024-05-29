@@ -179,6 +179,60 @@ get_seconds_parts() {
 }
 export_function_for_sh get_seconds_parts
 
+# ----------------------------------------
+# Snapper aliases
+# ----------------------------------------
+unalias n2038_snapper_create_snapshots_for_all_configs > /dev/null 2>&1
+# Creates snapshots for all Snapper configs
+n2038_snapper_create_snapshots_for_all_configs() {
+  local info="${1}" && { shift || true; }
+  if [ -z "${info}" ]; then
+    echo "Usage: n2038_snapper_create_snapshots_for_all_configs <info (description)>" >&2
+    return 1
+  fi
+
+  # Get configs as list
+  local configs_list
+  configs_list="$(n2038_snapper_list_configs)"
+
+  # Convert to array
+  declare -a configs
+  mapfile -t configs <<< "${configs_list}" || exit "$?"
+
+  # Create snapshot for each config
+  local config
+  for config in "${configs[@]}"; do
+    n2038_snapper_create_snapshot "${config}" "${info}"
+  done
+
+  return 0
+}
+
+unalias n2038_snapper_create_snapshots_for_main_configs > /dev/null 2>&1
+# Creates snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
+n2038_snapper_create_snapshots_for_main_configs() {
+  local info="${1}" && { shift || true; }
+  if [ -z "${info}" ]; then
+    echo "Usage: n2038_snapper_create_snapshots_for_main_configs <info (description)>" >&2
+    return 1
+  fi
+
+  # Configs to use
+  declare -a configs=(
+    "rootfs"
+    "home"
+    "root"
+  )
+
+  # Create snapshot for each config
+  for config in "${configs[@]}"; do
+    n2038_snapper_create_snapshot "${config}" "${info}"
+  done
+
+  return 0
+}
+# ----------------------------------------
+
 echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.2" >&2
 
 # ========================================
