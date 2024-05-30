@@ -124,13 +124,13 @@ n2038_snapper_delete_snapshot <config> <snapshot_id>
 #### 4.1.7. Print snapshot id for specified config and description with offset (default = 1 - the last snapshot by criteria)
 
 ```bash
-n2038_snapper_echo_snapshot_id_for_config <config> [description=nikolai2038] [offset=1]
+n2038_snapper_echo_snapshot_id_for_config <config> [offset=1] [description=nikolai2038]
 ```
 
 #### 4.1.8. Apply the specified snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
 
 ```bash
-n2038_snapper_rollback_main_configs [description=nikolai2038] [offset=1]
+n2038_snapper_rollback_main_configs [offset=1] [description=nikolai2038]
 ```
 
 ## 4. Settings

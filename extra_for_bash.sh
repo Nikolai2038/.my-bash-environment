@@ -238,8 +238,8 @@ n2038_snapper_echo_snapshot_id_for_config() {
     return 1
   fi
 
-  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
   local offset="${1:-1}" && { shift || true; }
+  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
 
   local snapshot_id
   # shellcheck disable=SC2086
@@ -258,8 +258,8 @@ n2038_snapper_echo_snapshot_id_for_config() {
 # Apply the specified snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 # shellcheck disable=SC2086
 n2038_snapper_rollback_main_configs() {
-  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
   local offset="${1:-1}" && { shift || true; }
+  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
 
   # Clear old backups
   if [ -e "${HOME_PARTITION_MOUNT_POINT}/@home_old" ]; then
@@ -276,7 +276,7 @@ n2038_snapper_rollback_main_configs() {
   # home
   ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home" "${HOME_PARTITION_MOUNT_POINT}/@home_old" || return "$?"
   local snapshot_id_for_home
-  snapshot_id_for_home="$(n2038_snapper_echo_snapshot_id_for_config "home" "${description}" "${offset}")"
+  snapshot_id_for_home="$(n2038_snapper_echo_snapshot_id_for_config "home" "${offset}" "${description}")"
   ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@home-snapshots/${snapshot_id_for_home}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@home" || {
     # Discard changes
     ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home_old" "${HOME_PARTITION_MOUNT_POINT}/@home" || return "$?"
@@ -287,7 +287,7 @@ n2038_snapper_rollback_main_configs() {
   # root
   ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root" "${HOME_PARTITION_MOUNT_POINT}/@root_old" || return "$?"
   local snapshot_id_for_root
-  snapshot_id_for_root="$(n2038_snapper_echo_snapshot_id_for_config "root" "${description}" "${offset}")"
+  snapshot_id_for_root="$(n2038_snapper_echo_snapshot_id_for_config "root" "${offset}" "${description}")"
   ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@root-snapshots/${snapshot_id_for_root}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@root" || {
     # Discard changes
     ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root_old" "${HOME_PARTITION_MOUNT_POINT}/@root" || return "$?"
@@ -297,7 +297,7 @@ n2038_snapper_rollback_main_configs() {
 
   # rootfs
   local snapshot_id_for_rootfs
-  snapshot_id_for_rootfs="$(n2038_snapper_echo_snapshot_id_for_config "rootfs" "${description}" "${offset}")"
+  snapshot_id_for_rootfs="$(n2038_snapper_echo_snapshot_id_for_config "rootfs" "${offset}" "${description}")"
   echo CONFIRM | ${sudo_prefix}snapper-rollback "${snapshot_id_for_rootfs}" || return "$?"
 
   ${sudo_prefix}reboot || return "$?"
