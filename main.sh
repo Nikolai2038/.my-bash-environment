@@ -478,10 +478,13 @@ di() {
 if [ -z "${SNAPPER_DESCRIPTION_KEYWORD}" ]; then
   SNAPPER_DESCRIPTION_KEYWORD="nikolai2038"
 fi
+if [ -z "${HOME_PARTITION_MOUNT_POINT}" ]; then
+  HOME_PARTITION_MOUNT_POINT="/mnt/partition-for-data"
+fi
 
 # Print a list of existing Snapper configs
 n2038_snapper_list_configs() {
-  ll /etc/snapper/configs
+  ll /etc/snapper/configs || return "$?"
   return 0
 }
 
@@ -494,7 +497,7 @@ n2038_snapper_list_snapshots() {
   fi
 
   # shellcheck disable=SC2086
-  ${sudo_prefix}snapper -c "${config}" --iso list --columns number,type,cleanup,date,description,userdata
+  ${sudo_prefix}snapper -c "${config}" --iso list --columns number,type,cleanup,date,description,userdata || return "$?"
 
   return 0
 }
@@ -509,7 +512,7 @@ n2038_snapper_create_snapshot() {
   fi
 
   # shellcheck disable=SC2086
-  ${sudo_prefix}snapper -c "${config}" create --description "${SNAPPER_DESCRIPTION_KEYWORD}" --userdata "info='${info}'"
+  ${sudo_prefix}snapper -c "${config}" create --description "${SNAPPER_DESCRIPTION_KEYWORD}" --userdata "info='${info}'" || return "$?"
 
   return 0
 }
@@ -524,7 +527,7 @@ n2038_snapper_delete_snapshot() {
   fi
 
   # shellcheck disable=SC2086
-  ${sudo_prefix}snapper -c "${config}" delete "${snapshot_id}"
+  ${sudo_prefix}snapper -c "${config}" delete "${snapshot_id}" || return "$?"
 
   return 0
 }

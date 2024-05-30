@@ -229,6 +229,81 @@ n2038_snapper_create_snapshots_for_main_configs() {
 
   return 0
 }
+
+# Print snapshot id for specified config and description with offset (default = 1 - the last snapshot by criteria)
+n2038_snapper_echo_snapshot_id_for_config() {
+  local config="${1}" && { shift || true; }
+  if [ -z "${config}" ]; then
+    echo "Enter config name!" >&2
+    return 1
+  fi
+
+  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
+  local offset="${1:-1}" && { shift || true; }
+
+  local snapshot_id
+  # shellcheck disable=SC2086
+  snapshot_id="$(${sudo_prefix}snapper -c "${config}" list --columns description,number | sed -En "s/^${description}\\s*[\\|│]\\s*([0-9]+)\\s*\$/\\1/p" | tail -n "${offset}" | head -n 1)" || return "$?"
+
+  if [ -z "${snapshot_id}" ]; then
+    echo "Snapshot number not found!" >&2
+    return 1
+  fi
+
+  echo "${snapshot_id}"
+
+  return 0
+}
+
+# Apply the specified snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
+# shellcheck disable=SC2086
+n2038_snapper_rollback_main_configs() {
+  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
+  local offset="${1:-1}" && { shift || true; }
+
+  # Clear old backups
+  if [ -e "${HOME_PARTITION_MOUNT_POINT}/@home_old" ]; then
+    ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@home_old"
+  fi
+  if [ -e "${HOME_PARTITION_MOUNT_POINT}/@root_old" ]; then
+    ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@root_old"
+  fi
+
+  n2038_snapper_create_snapshots_for_main_configs "Auto-backup before restoring" || return "$?"
+  # Because we created snapshots right now, we must increase offset by 1
+  ((offset++))
+
+  # home
+  ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home" "${HOME_PARTITION_MOUNT_POINT}/@home_old" || return "$?"
+  local snapshot_id_for_home
+  snapshot_id_for_home="$(n2038_snapper_echo_snapshot_id_for_config "home" "${description}" "${offset}")"
+  ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@home-snapshots/${snapshot_id_for_home}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@home" || {
+    # Discard changes
+    ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home_old" "${HOME_PARTITION_MOUNT_POINT}/@home" || return "$?"
+
+    return "$?"
+  }
+
+  # root
+  ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root" "${HOME_PARTITION_MOUNT_POINT}/@root_old" || return "$?"
+  local snapshot_id_for_root
+  snapshot_id_for_root="$(n2038_snapper_echo_snapshot_id_for_config "root" "${description}" "${offset}")"
+  ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@root-snapshots/${snapshot_id_for_root}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@root" || {
+    # Discard changes
+    ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root_old" "${HOME_PARTITION_MOUNT_POINT}/@root" || return "$?"
+
+    return "$?"
+  }
+
+  # rootfs
+  local snapshot_id_for_rootfs
+  snapshot_id_for_rootfs="$(n2038_snapper_echo_snapshot_id_for_config "rootfs" "${description}" "${offset}")"
+  echo CONFIRM | ${sudo_prefix}snapper-rollback "${snapshot_id_for_rootfs}" || return "$?"
+
+  ${sudo_prefix}reboot || return "$?"
+
+  return 0
+}
 # ----------------------------------------
 
 echo_if_messages "${my_prefix}Nikolai's .my-bash-environment v.0.3.2" >&2
