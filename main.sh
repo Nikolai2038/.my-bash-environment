@@ -476,16 +476,16 @@ if [ -z "${HOME_PARTITION_MOUNT_POINT}" ]; then
 fi
 
 # Print a list of existing Snapper configs
-n2038_snapper_list_configs() {
+_n2038_snapper_list_configs() {
   ll /etc/snapper/configs || return "$?"
   return 0
 }
 
-# Print a list of snapshots of specified Snapper config
-n2038_snapper_list_snapshots() {
+# Print a list of all snapshots of specified Snapper config
+_n2038_snapper_list_snapshots_all() {
   config="${1}" && { shift || true; }
   if [ -z "${config}" ]; then
-    echo "Usage: n2038_snapper_list_snapshots <config name>" >&2
+    echo "Usage: _n2038_snapper_list_snapshots_all <config name>" >&2
     return 1
   fi
 
@@ -495,12 +495,39 @@ n2038_snapper_list_snapshots() {
   return 0
 }
 
+# Print a list of keyword snapshots with offset value
+n2038_snapper_list() {
+  if ! bat --help > /dev/null 2>&1; then
+    echo "Snapper is not installed!" >&2
+    return 1
+  fi
+
+  column_name_1="offset"
+  column_name_2="description"
+  echo "========================================"
+  echo "${column_name_1} | ${column_name_2}"
+  echo "========================================"
+
+  # "nl" to print line numbers (for "offset variable")
+  # "tac" for reverse order
+  # shellcheck disable=SC2086
+  ${sudo_prefix}snapper -c "rootfs" --iso list --type single --columns userdata,description | sed -En "s/info='([^']*)'\s*[\\|│] ${SNAPPER_DESCRIPTION_KEYWORD}\$/\1/p" \
+    | tac \
+    | nl --number-width="${#column_name_1}" --number-separator=" | " \
+    | tac \
+    || return "$?"
+
+  echo "========================================"
+
+  return 0
+}
+
 # Creates a snapshots with specified comment for specified Snapper config
-n2038_snapper_create_snapshot() {
+_n2038_snapper_create_snapshot() {
   config="${1}" && { shift || true; }
   info="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${info}" ]; then
-    echo "Usage: n2038_snapper_create_snapshot <config name> <info (description)>" >&2
+    echo "Usage: _n2038_snapper_create_snapshot <config name> <info (description)>" >&2
     return 1
   fi
 
@@ -511,11 +538,11 @@ n2038_snapper_create_snapshot() {
 }
 
 # Delete a snapshot with specified ID for specified Snapper config
-n2038_snapper_delete_snapshot() {
+_n2038_snapper_delete_snapshot() {
   config="${1}" && { shift || true; }
   snapshot_id="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${snapshot_id}" ]; then
-    echo "Usage: n2038_snapper_delete_snapshot <config name> <snapshot_id>" >&2
+    echo "Usage: _n2038_snapper_delete_snapshot <config name> <snapshot_id>" >&2
     return 1
   fi
 

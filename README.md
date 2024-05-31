@@ -84,52 +84,22 @@ You can also just run installation above to update by hand.
 
 ### 4.1. Snapper
 
-#### 4.1.1. Print a list of existing Snapper configs
+#### 4.1.1. Print a list of keyword snapshots with offset value
 
 ```bash
-n2038_snapper_list_configs
+n2038_snapper_list
 ```
 
-#### 4.1.2. Print a list of snapshots of specified Snapper config
+#### 4.1.2. Creates snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
 
 ```bash
-n2038_snapper_list_snapshots <config>
+n2038_snapper_create_with_info <info>
 ```
 
-#### 4.1.3. Creates a snapshots with specified comment for specified Snapper config
+#### 4.1.3. Apply the specified snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
 
 ```bash
-n2038_snapper_create_snapshot <config> <info (description)>
-```
-
-#### 4.1.4. Creates snapshots for all Snapper configs
-
-```bash
-n2038_snapper_create_snapshots_for_all_configs <info (description)>
-```
-
-#### 4.1.5. Creates snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
-
-```bash
-n2038_snapper_create_snapshots_for_main_configs <info (description)>
-```
-
-#### 4.1.6. Delete a snapshot with specified ID for specified Snapper config
-
-```bash
-n2038_snapper_delete_snapshot <config> <snapshot_id>
-```
-
-#### 4.1.7. Print snapshot id for specified config and description with offset (default = 1 - the last snapshot by criteria)
-
-```bash
-n2038_snapper_echo_snapshot_id_for_config <config> [offset=1] [description=nikolai2038]
-```
-
-#### 4.1.8. Apply the specified snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
-
-```bash
-n2038_snapper_rollback_main_configs [offset=1] [description=nikolai2038]
+n2038_snapper_goto_offset <offset>
 ```
 
 ## 4. Settings
