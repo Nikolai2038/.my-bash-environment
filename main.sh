@@ -303,13 +303,6 @@ if git --help > /dev/null 2>&1; then
   git config --global --unset user.email
 fi
 
-# Colorful less
-if source-highlight --help > /dev/null 2>&1; then
-  lesspipe_script="$(find /usr -name 'src-hilite-lesspipe.sh' -type f -executable 2> /dev/null | head -n 1)"
-  export LESSOPEN="| ${lesspipe_script} %s"
-  export LESS=' -R '
-fi
-
 # ========================================
 # Aliases
 # TODO: Make them work in inner "sh"
@@ -544,6 +537,11 @@ fi
 # "bat" is colorized "cat", so we use it, if it is installed.
 if bat --help > /dev/null 2>&1; then
   alias cat="bat --style='plain' --paging=never --theme='Visual Studio Dark+'"
+
+  # pat pat
+  alias pat="cat --paging=always"
+
+  alias less="pat"
 fi
 
 # Not all "su" commands have this option, so we check for that

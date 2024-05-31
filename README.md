@@ -13,7 +13,7 @@ My CLI configs to easily download and use on new machines.
 - Debian-based:
    
    ```bash
-   sudo apt-get update && sudo apt-get install -y curl git psmisc bat source-highlight && \
+   sudo apt-get update && sudo apt-get install -y curl git psmisc bat && \
    if [ -d "${HOME}/.my-bash-environment" ]; then rm -rf "${HOME}/.my-bash-environment"; fi && \
    git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
    rm -rf "${HOME}/.my-bash-environment/.git" && \
@@ -23,7 +23,7 @@ My CLI configs to easily download and use on new machines.
 - Arch-based:
 
    ```bash
-   sudo pacman -Sy --noconfirm --needed curl git psmisc bat source-highlight && \
+   sudo pacman -Sy --noconfirm --needed curl git psmisc bat && \
    if [ -d "${HOME}/.my-bash-environment" ]; then rm -rf "${HOME}/.my-bash-environment"; fi && \
    git clone https://github.com/Nikolai2038/.my-bash-environment.git "${HOME}/.my-bash-environment" && \
    rm -rf "${HOME}/.my-bash-environment/.git" && \
@@ -51,20 +51,19 @@ My CLI configs to easily download and use on new machines.
    - Debian-based:
    
       ```bash
-      sudo apt-get update && sudo apt-get install -y psmisc bat source-highlight
+      sudo apt-get update && sudo apt-get install -y psmisc bat
       ```
 
    - Arch-based:
 
       ```bash
-      sudo pacman -Sy --noconfirm --needed psmisc bat source-highlight
+      sudo pacman -Sy --noconfirm --needed psmisc bat
       ```
 
    Descriptions:
 
     - `psmisc` for `pstree` command - to show terminal depth;
-    - `bat` for `bat`/`batcat` command - colorized `cat`;
-    - `source-highlight` for colorful `less` command.
+    - `bat` for `bat`/`batcat` command - colorized `cat`.
 
 3. Clone repository and apply script:
 
