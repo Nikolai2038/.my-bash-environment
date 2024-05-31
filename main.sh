@@ -205,7 +205,7 @@ ps1_function() {
   fi
 
   # "get_execution_time" available only for "bash", so we ignore error in "sh"
-  execution_time="$(get_execution_time > /dev/null 2>&1)" || true
+  execution_time="$(get_execution_time 2> /dev/null)" || true
 
   # There is warning about HOSTNAME being undefined in POSIX "sh", so just in case, we use "hostname" command to get it, if it is installed.
   # If it is not installed, then there is no much we can do.
