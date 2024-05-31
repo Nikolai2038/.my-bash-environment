@@ -80,28 +80,6 @@ Script will autoupdate itself. You can disable it via env-variables (see below).
 
 You can also just run installation above to update by hand.
 
-## 4. Aliases (in work)
-
-### 4.1. Snapper
-
-#### 4.1.1. Print a list of keyword snapshots with offset value
-
-```bash
-n2038_snapper_list
-```
-
-#### 4.1.2. Creates snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
-
-```bash
-n2038_snapper_create_with_info <info>
-```
-
-#### 4.1.3. Apply the specified snapshots for main Snapper configs (which for me are: `rootfs`, `home` and `root`)
-
-```bash
-n2038_snapper_goto_offset <offset>
-```
-
 ## 4. Settings
 
 You can change script's behaviour via env-variables:
