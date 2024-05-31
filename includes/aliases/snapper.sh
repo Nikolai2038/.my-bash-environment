@@ -4,8 +4,8 @@
 # Snapper aliases
 # ----------------------------------------
 
-if [ -z "${SNAPPER_DESCRIPTION_KEYWORD}" ]; then
-  SNAPPER_DESCRIPTION_KEYWORD="nikolai2038"
+if [ -z "${SNAPPER_USERDATA_TAG}" ]; then
+  SNAPPER_USERDATA_TAG="n2038"
 fi
 if [ -z "${HOME_PARTITION_MOUNT_POINT}" ]; then
   HOME_PARTITION_MOUNT_POINT="/mnt/partition-for-data"
@@ -38,8 +38,8 @@ n2038_snapper_list() {
     return 1
   fi
 
-  column_name_1="offset"
-  column_name_2="description"
+  local column_name_1="offset"
+  local column_name_2="description"
   echo "========================================"
   echo "${column_name_1} | ${column_name_2}"
   echo "========================================"
@@ -47,10 +47,8 @@ n2038_snapper_list() {
   # "nl" to print line numbers (for "offset variable")
   # "tac" for reverse order
   # shellcheck disable=SC2086
-  ${sudo_prefix}snapper -c "rootfs" --iso list --type single --columns userdata,description | sed -En "s/info='([^']*)'\s*[\\|│] ${SNAPPER_DESCRIPTION_KEYWORD}\$/\1/p" \
-    | tac \
+  ${sudo_prefix}snapper -c "rootfs" --iso list --type single --columns userdata,description | sed -En "s/tag=${SNAPPER_USERDATA_TAG}\\s*[\\|│] (.*)\$/\1/p" \
     | nl --number-width="${#column_name_1}" --number-separator=" | " \
-    | tac \
     || return "$?"
 
   echo "========================================"
@@ -61,14 +59,14 @@ n2038_snapper_list() {
 # Creates a snapshots with specified comment for specified Snapper config
 _n2038_snapper_create_snapshot() {
   config="${1}" && { shift || true; }
-  info="${1}" && { shift || true; }
-  if [ -z "${config}" ] || [ -z "${info}" ]; then
+  description="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${description}" ]; then
     echo "Usage: _n2038_snapper_create_snapshot <config name> <info (description)>" >&2
     return 1
   fi
 
   # shellcheck disable=SC2086
-  ${sudo_prefix}snapper -c "${config}" create --description "${SNAPPER_DESCRIPTION_KEYWORD}" --userdata "info='${info}'" || return "$?"
+  ${sudo_prefix}snapper -c "${config}" create --description "${description}" --userdata "tag='${SNAPPER_USERDATA_TAG}'" || return "$?"
 
   return 0
 }
@@ -88,10 +86,6 @@ _n2038_snapper_delete_snapshot() {
   return 0
 }
 
-
-# ----------------------------------------
-# Snapper aliases
-# ----------------------------------------
 # Creates snapshots for all Snapper configs
 _n2038_snapper_create_snapshots_for_all_configs() {
   local info="${1}" && { shift || true; }
@@ -153,7 +147,7 @@ _n2038_snapper_echo_snapshot_id_for_config() {
     echo "Usage: _n2038_snapper_echo_snapshot_id_for_config <config> <offset> [description=nikolai2038]" >&2
     return 1
   fi
-  local description="${1:-${SNAPPER_DESCRIPTION_KEYWORD}}" && { shift || true; }
+  local description="${1:-${SNAPPER_USERDATA_TAG}}" && { shift || true; }
 
   local snapshot_id
   # shellcheck disable=SC2086
@@ -198,7 +192,7 @@ n2038_snapper_goto_offset() {
   # home
   ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home" "${HOME_PARTITION_MOUNT_POINT}/@home_old" || return "$?"
   local snapshot_id_for_home
-  snapshot_id_for_home="$(_n2038_snapper_echo_snapshot_id_for_config "home" "${offset}" "${SNAPPER_DESCRIPTION_KEYWORD}")"
+  snapshot_id_for_home="$(_n2038_snapper_echo_snapshot_id_for_config "home" "${offset}" "${SNAPPER_USERDATA_TAG}")"
   ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@home-snapshots/${snapshot_id_for_home}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@home" || {
     # Discard changes
     ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home_old" "${HOME_PARTITION_MOUNT_POINT}/@home" || return "$?"
@@ -209,7 +203,7 @@ n2038_snapper_goto_offset() {
   # root
   ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root" "${HOME_PARTITION_MOUNT_POINT}/@root_old" || return "$?"
   local snapshot_id_for_root
-  snapshot_id_for_root="$(_n2038_snapper_echo_snapshot_id_for_config "root" "${offset}" "${SNAPPER_DESCRIPTION_KEYWORD}")"
+  snapshot_id_for_root="$(_n2038_snapper_echo_snapshot_id_for_config "root" "${offset}" "${SNAPPER_USERDATA_TAG}")"
   ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@root-snapshots/${snapshot_id_for_root}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@root" || {
     # Discard changes
     ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root_old" "${HOME_PARTITION_MOUNT_POINT}/@root" || return "$?"
