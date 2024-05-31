@@ -189,10 +189,10 @@ n2038_snapper_goto_n2038_number() {
 
   # Clear old backups
   if [ -e "${HOME_PARTITION_MOUNT_POINT}/@home_old" ]; then
-    ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@home_old"
+    ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@home_old" || return "$?"
   fi
   if [ -e "${HOME_PARTITION_MOUNT_POINT}/@root_old" ]; then
-    ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@root_old"
+    ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@root_old" || return "$?"
   fi
 
   n2038_snapper_create_with_description "Auto-backup before restoring" || return "$?"
