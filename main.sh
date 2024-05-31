@@ -310,12 +310,18 @@ fi
 # We use some functions as aliases.
 # But we must unalias functions' names if they exist, because alias has more priority than function.
 
-. ./includes/aliases/apt.sh
-. ./includes/aliases/docker.sh
-. ./includes/aliases/git.sh
-. ./includes/aliases/ls.sh
-. ./includes/aliases/pacman.sh
-. ./includes/aliases/snapper.sh
+# shellcheck source=./includes/aliases/apt.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/apt.sh"
+# shellcheck source=./includes/aliases/docker.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/docker.sh"
+# shellcheck source=./includes/aliases/git.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/git.sh"
+# shellcheck source=./includes/aliases/ls.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/ls.sh"
+# shellcheck source=./includes/aliases/pacman.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/pacman.sh"
+# shellcheck source=./includes/aliases/snapper.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/snapper.sh"
 
 # Use as alias but without space
 unalias examples > /dev/null 2>&1
