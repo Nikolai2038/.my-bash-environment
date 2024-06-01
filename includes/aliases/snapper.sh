@@ -10,18 +10,22 @@ fi
 if [ -z "${HOME_PARTITION_MOUNT_POINT}" ]; then
   HOME_PARTITION_MOUNT_POINT="/mnt/partition-for-data"
 fi
+if [ -z "${BY_HAND_PREFIX}" ]; then
+  BY_HAND_PREFIX="BY HAND: "
+fi
 
 # Creates a snapshots with specified comment for specified Snapper config
 _n2038_snapper_create_snapshot() {
+  local prefix="${1}" && { shift || true; }
   local config="${1}" && { shift || true; }
   local description="${1}" && { shift || true; }
-  if [ -z "${config}" ] || [ -z "${description}" ]; then
-    echo "Usage: _n2038_snapper_create_snapshot <config name> <description>" >&2
+  if [ -z "${prefix}" ] || [ -z "${config}" ] || [ -z "${description}" ]; then
+    echo "Usage: _n2038_snapper_create_snapshot <prefix> <config name> <description>" >&2
     return 1
   fi
 
   # shellcheck disable=SC2086
-  ${sudo_prefix}snapper -c "${config}" create --description "BY HAND: ${description}" --userdata "tag=${SNAPPER_USERDATA_TAG}" || return "$?"
+  ${sudo_prefix}snapper -c "${config}" create --description "${prefix}${description}" --userdata "tag=${SNAPPER_USERDATA_TAG}" || return "$?"
 
   return 0
 }
@@ -43,9 +47,10 @@ _n2038_snapper_delete_snapshot() {
 
 # Creates snapshots for all Snapper configs
 _n2038_snapper_create_snapshots_for_all_configs() {
+  local prefix="${1}" && { shift || true; }
   local info="${1}" && { shift || true; }
-  if [ -z "${info}" ]; then
-    echo "Usage: _n2038_snapper_create_snapshots_for_all_configs <description>" >&2
+  if [ -z "${prefix}" ] || [ -z "${info}" ]; then
+    echo "Usage: _n2038_snapper_create_snapshots_for_all_configs <prefix> <description>" >&2
     return 1
   fi
 
@@ -60,13 +65,13 @@ _n2038_snapper_create_snapshots_for_all_configs() {
   # Create snapshot for each config
   local config
   for config in "${configs[@]}"; do
-    _n2038_snapper_create_snapshot "${config}" "${info}"
+    _n2038_snapper_create_snapshot "${prefix}" "${config}" "${info}"
   done
 
   return 0
 }
 
-# Print snapshot id for specified config and description with n2038_number (default = 1 - the last snapshot by criteria)
+# Print snapshot id for specified config and description with n2038_number
 _n2038_snapper_echo_snapshot_id_for_config() {
   local config="${1}" && { shift || true; }
   local n2038_number="${1}" && { shift || true; }
@@ -77,14 +82,37 @@ _n2038_snapper_echo_snapshot_id_for_config() {
 
   local snapshot_id
   # shellcheck disable=SC2086
-  snapshot_id="$(${sudo_prefix}snapper -c "${config}" list --columns userdata,number | sed -En "s/^tag=${SNAPPER_USERDATA_TAG}\\s*[\\|│]\\s*([0-9]+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1 )" || return "$?"
+  snapshot_id="$(${sudo_prefix}snapper -c "${config}" list --columns userdata,number | sed -En "s/^tag=${SNAPPER_USERDATA_TAG}\\s*[\\|│]\\s*([0-9]+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1)" || return "$?"
 
   if [ -z "${snapshot_id}" ]; then
-    echo "Snapshot number not found!" >&2
+    echo "Snapshot not found!" >&2
     return 1
   fi
 
   echo "${snapshot_id}"
+
+  return 0
+}
+
+# Print snapshot description for specified config and description with n2038_number
+_n2038_snapper_echo_snapshot_description_for_config() {
+  local config="${1}" && { shift || true; }
+  local n2038_number="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${n2038_number}" ]; then
+    echo "Usage: _n2038_snapper_echo_snapshot_id_for_config <config> <n2038_number>" >&2
+    return 1
+  fi
+
+  local snapshot_description
+  # shellcheck disable=SC2086
+  snapshot_description="$(${sudo_prefix}snapper -c "${config}" list --columns userdata,description | sed -En "s/^tag=${SNAPPER_USERDATA_TAG}\\s*[\\|│]\\s*(.+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1)" || return "$?"
+
+  if [ -z "${snapshot_description}" ]; then
+    echo "Snapshot not found!" >&2
+    return 1
+  fi
+
+  echo "${snapshot_description}"
 
   return 0
 }
@@ -154,9 +182,10 @@ n2038_snapper_create_with_description() {
 
   local description="${1}" && { shift || true; }
   if [ -z "${description}" ]; then
-    echo "Usage: n2038_snapper_create_with_description <description>" >&2
+    echo "Usage: n2038_snapper_create_with_description <description> [prefix=\"${BY_HAND_PREFIX}\"]" >&2
     return 1
   fi
+  local prefix="${1:-${BY_HAND_PREFIX}}" && { shift || true; }
 
   # Configs to use
   declare -a configs=(
@@ -167,7 +196,7 @@ n2038_snapper_create_with_description() {
 
   # Create snapshot for each config
   for config in "${configs[@]}"; do
-    _n2038_snapper_create_snapshot "${config}" "${description}" || return "$?"
+    _n2038_snapper_create_snapshot "${prefix}" "${config}" "${description}" || return "$?"
   done
 
   return 0
@@ -195,14 +224,22 @@ n2038_snapper_goto_n2038_number() {
     ${sudo_prefix}rm -Rf "${HOME_PARTITION_MOUNT_POINT}/@root_old" || return "$?"
   fi
 
-  n2038_snapper_create_with_description "Auto-backup before restoring" || return "$?"
+  local snapshot_description
+  snapshot_description="$(_n2038_snapper_echo_snapshot_description_for_config "home" "${n2038_number}" "${SNAPPER_USERDATA_TAG}")" || return "$?"
+
+  local snapshot_id_for_home
+  snapshot_id_for_home="$(_n2038_snapper_echo_snapshot_id_for_config "home" "${n2038_number}" "${SNAPPER_USERDATA_TAG}")" || return "$?"
+
+  local snapshot_id_for_root
+  snapshot_id_for_root="$(_n2038_snapper_echo_snapshot_id_for_config "root" "${n2038_number}" "${SNAPPER_USERDATA_TAG}")" || return "$?"
+
+  # We pass empty string for second argument to not add prefix
+  n2038_snapper_create_with_description "Auto-backup before restoring to #${n2038_number} \"${snapshot_description//"${BY_HAND_PREFIX}"/}\"" "" || return "$?"
   # Because we created snapshots right now, we must increase n2038_number by 1
   ((n2038_number++))
 
   # home
   ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home" "${HOME_PARTITION_MOUNT_POINT}/@home_old" || return "$?"
-  local snapshot_id_for_home
-  snapshot_id_for_home="$(_n2038_snapper_echo_snapshot_id_for_config "home" "${n2038_number}" "${SNAPPER_USERDATA_TAG}")"
   ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@home-snapshots/${snapshot_id_for_home}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@home" || {
     # Discard changes
     ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@home_old" "${HOME_PARTITION_MOUNT_POINT}/@home" || return "$?"
@@ -212,8 +249,6 @@ n2038_snapper_goto_n2038_number() {
 
   # root
   ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root" "${HOME_PARTITION_MOUNT_POINT}/@root_old" || return "$?"
-  local snapshot_id_for_root
-  snapshot_id_for_root="$(_n2038_snapper_echo_snapshot_id_for_config "root" "${n2038_number}" "${SNAPPER_USERDATA_TAG}")"
   ${sudo_prefix}btrfs subvolume snapshot "${HOME_PARTITION_MOUNT_POINT}/@root-snapshots/${snapshot_id_for_root}/snapshot" "${HOME_PARTITION_MOUNT_POINT}/@root" || {
     # Discard changes
     ${sudo_prefix}mv --no-target-directory "${HOME_PARTITION_MOUNT_POINT}/@root_old" "${HOME_PARTITION_MOUNT_POINT}/@root" || return "$?"
