@@ -5,9 +5,11 @@
 # ----------------------------------------
 # Update packages
 # Passing two "--refresh" flags will force a refresh of all package databases, even if they appear to be up-to-date.
+# We rebuild the kernel to avoid errors on reboot, if some required packages were updated.
 # shellcheck disable=2139
-alias pu="${sudo_prefix}pacman --noconfirm --sync --refresh --refresh --needed --sysupgrade"
-alias yu="${sudo_prefix}yay --noconfirm --sync --refresh --refresh --needed --sysupgrade"
+alias pu="${sudo_prefix}pacman --noconfirm --sync --refresh --refresh --needed --sysupgrade && ${sudo_prefix}mkinitcpio -P"
+alias yu="${sudo_prefix}yay --noconfirm --sync --refresh --refresh --needed --sysupgrade && ${sudo_prefix}mkinitcpio -P"
+alias puyu="${sudo_prefix}pacman --noconfirm --sync --refresh --refresh --needed --sysupgrade && ${sudo_prefix}yay --noconfirm --sync --refresh --refresh --needed --sysupgrade && ${sudo_prefix}mkinitcpio -P"
 
 # Install packages
 # shellcheck disable=2139
