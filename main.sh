@@ -333,7 +333,8 @@ EOF
 }
 
 # journalctl
-alias jctl='journalctl --output=short-full --pager-end --no-hostname --boot=0'
+alias jctl='journalctl --pager-end --no-hostname --boot=0 --output=short'
+alias jctlf='jctl --follow'
 
 # Binary can be called "batcat"
 if { { ! bat --help; } && batcat --help; } > /dev/null 2>&1; then
