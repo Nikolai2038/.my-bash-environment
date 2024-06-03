@@ -318,8 +318,8 @@ fi
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/git.sh"
 # shellcheck source=./includes/aliases/ls.sh
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/ls.sh"
-# shellcheck source=./includes/aliases/pacman.sh
-. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/pacman.sh"
+# shellcheck source=./includes/aliases/pacman_and_yay.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/pacman_and_yay.sh"
 # shellcheck source=./includes/aliases/snapper.sh
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/snapper.sh"
 
