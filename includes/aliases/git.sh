@@ -13,4 +13,10 @@ alias gc="git commit -m"
 alias gac="ga && gc"
 alias gpush="git push"
 alias gpull="git pull"
+
+# Print list of aliases
+git config --global alias.aliases-list 'config --get-regexp ^alias\\.'
+
+# Always clone with recursive submodules
+git config --global alias.c 'clone --recurse-submodules'
 # ----------------------------------------
