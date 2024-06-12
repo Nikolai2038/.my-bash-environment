@@ -60,7 +60,7 @@ _n2038_snapper_create_snapshots_for_all_configs() {
 
   # Convert to array
   declare -a configs
-  mapfile -t configs <<< "${configs_list}" || exit "$?"
+  mapfile -t configs <<< "${configs_list}" || return "$?"
 
   # Create snapshot for each config
   local config
@@ -266,4 +266,81 @@ n2038_snapper_goto_n2038_number() {
   return 0
 }
 
+# Delete snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
+n2038_snapper_delete() {
+  if ! bat --help > /dev/null 2>&1; then
+    echo "Snapper is not installed!" >&2
+    return 1
+  fi
+
+  local n2038_number="${1}" && { shift || true; }
+  if [ -z "${n2038_number}" ]; then
+    echo "Usage: n2038_snapper_delete <n2038_number>" >&2
+    return 1
+  fi
+
+  # Configs to use
+  declare -a configs=(
+    "rootfs"
+    "home"
+    "root"
+  )
+
+  # Create snapshot for each config
+  for config in "${configs[@]}"; do
+    local snapshot_id
+    snapshot_id="$(_n2038_snapper_echo_snapshot_id_for_config "${config}" "${n2038_number}")" || return "$?"
+    # shellcheck disable=SC2086
+    ${sudo_prefix}snapper -c "${config}" delete "${snapshot_id}"|| return "$?"
+  done
+
+  return 0
+}
+
+# Delete all boot snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
+n2038_snapper_delete_all_boot() {
+  if ! bat --help > /dev/null 2>&1; then
+    echo "Snapper is not installed!" >&2
+    return 1
+  fi
+
+  local ids
+  ids="$(n2038_snapper_list | grep -r '[|│] boot$' | awk '{print $1}' | sort -n -r)"
+
+  # Convert to array
+  declare -a ids_array
+  mapfile -t ids_array <<< "${ids}" || return "$?"
+
+
+  # Create snapshot for each config
+  for id in "${ids_array[@]}"; do
+    n2038_snapper_delete "${id}" || return "$?"
+  done
+
+  return 0
+}
+
+# TODO:
+## Delete all automated (not by hand) snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
+#n2038_snapper_delete_all_automated() {
+#  if ! bat --help > /dev/null 2>&1; then
+#    echo "Snapper is not installed!" >&2
+#    return 1
+#  fi
+#
+#  local ids
+#  ids="$(n2038_snapper_list | grep -r '[|│] boot$' | awk '{print $1}' | sort -n -r)"
+#
+#  # Convert to array
+#  declare -a ids_array
+#  mapfile -t ids_array <<< "${ids}" || return "$?"
+#
+#
+#  # Create snapshot for each config
+#  for id in "${ids_array[@]}"; do
+#    n2038_snapper_delete "${id}" || return "$?"
+#  done
+#
+#  return 0
+#}
 # ----------------------------------------
