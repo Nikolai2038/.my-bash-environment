@@ -305,7 +305,7 @@ n2038_snapper_delete_all_boot() {
   fi
 
   local ids
-  ids="$(n2038_snapper_list | grep -r '[|│] boot$' | awk '{print $1}' | sort -n -r)"
+  ids="$(n2038_snapper_list | grep '[|│] boot$' | awk '{print $1}' | sort --numeric-sort --reverse)"
 
   # Convert to array
   declare -a ids_array
@@ -320,27 +320,25 @@ n2038_snapper_delete_all_boot() {
   return 0
 }
 
-# TODO:
-## Delete all automated (not by hand) snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
-#n2038_snapper_delete_all_automated() {
-#  if ! bat --help > /dev/null 2>&1; then
-#    echo "Snapper is not installed!" >&2
-#    return 1
-#  fi
-#
-#  local ids
-#  ids="$(n2038_snapper_list | grep -r '[|│] boot$' | awk '{print $1}' | sort -n -r)"
-#
-#  # Convert to array
-#  declare -a ids_array
-#  mapfile -t ids_array <<< "${ids}" || return "$?"
-#
-#
-#  # Create snapshot for each config
-#  for id in "${ids_array[@]}"; do
-#    n2038_snapper_delete "${id}" || return "$?"
-#  done
-#
-#  return 0
-#}
+# Delete all automated (not by hand) snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
+n2038_snapper_delete_all_not_by_hand() {
+  if ! bat --help > /dev/null 2>&1; then
+    echo "Snapper is not installed!" >&2
+    return 1
+  fi
+
+  local ids
+  ids="$(n2038_snapper_list | grep --invert-match "[|│] ${BY_HAND_PREFIX}" | awk '{print $1}' | sed -En '/^[0-9]+$/p' | sort --numeric-sort --reverse)"
+
+  # Convert to array
+  declare -a ids_array
+  mapfile -t ids_array <<< "${ids}" || return "$?"
+
+  # Create snapshot for each config
+  for id in "${ids_array[@]}"; do
+    n2038_snapper_delete "${id}" || return "$?"
+  done
+
+  return 0
+}
 # ----------------------------------------
