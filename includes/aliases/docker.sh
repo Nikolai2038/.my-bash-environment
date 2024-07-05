@@ -12,22 +12,38 @@ alias dcb='docker-compose build'
 alias dcstart='docker-compose start'
 alias dcstop='docker-compose stop'
 alias dcr='docker-compose restart'
-alias dcbu='dcb && dcu'
-alias dcbd='dcb && dcd'
-alias dcdu='dcd && dcu'
-alias dcbdu='dcb && dcd && dcu'
 alias dcl='docker-compose logs'
+
+unalias dcbu > /dev/null 2>&1
+dcbu() {
+  dcb "$@" && dcu "$@"
+  return 0
+}
+
+unalias dcbd > /dev/null 2>&1
+dcbd() {
+  dcb "$@" && dcd "$@"
+  return 0
+}
+
+unalias dcdu > /dev/null 2>&1
+dcdu() {
+  dcd "$@" && dcu "$@"
+  return 0
+}
+
+unalias dcbdu > /dev/null 2>&1
+dcbdu() {
+  dcb "$@" && dcd "$@" && dcu "$@"
+  return 0
+}
+
 unalias dce > /dev/null 2>&1
 dce() {
-  docker-compose exec -it "$@" bash
+  docker-compose exec -it "$@"
   return 0
 }
-unalias dcec > /dev/null 2>&1
-dcec() {
-  container_name="${1}" && { shift || true; }
-  docker-compose exec -it "${container_name}" bash -c "$*"
-  return 0
-}
+
 unalias di > /dev/null 2>&1
 di() {
   info=$(docker image list --format "${_C_SUCCESS}{{.Repository}}${_C_TEXT}:${_C_BORDER_USUAL}{{.Tag}}${_C_TEXT} ({{.Size}})${_C_RESET}" --filter "dangling=false" | grep -v '<none>' | sort)
