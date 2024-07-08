@@ -80,7 +80,7 @@ function n2038_snapper_list_custom() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: n2038_snapper_list_custom <config name>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config name>" >&2
     local list_of_available_configs
     list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     echo "Available configs: ${list_of_available_configs}" >&2

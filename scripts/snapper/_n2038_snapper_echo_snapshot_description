@@ -78,7 +78,7 @@ function _n2038_snapper_echo_snapshot_description() {
   local config="${1}" && { shift || true; }
   local n2038_number="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${n2038_number}" ]; then
-    echo "Usage: n2038_snapper_echo_snapshot_description <config> <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
     return 1
   fi
 

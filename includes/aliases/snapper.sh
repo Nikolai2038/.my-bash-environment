@@ -20,7 +20,7 @@ _n2038_snapper_create_snapshot() {
   local config="${1}" && { shift || true; }
   local description="${1}" && { shift || true; }
   if [ -z "${prefix}" ] || [ -z "${config}" ] || [ -z "${description}" ]; then
-    echo "Usage: _n2038_snapper_create_snapshot <prefix> <config name> <description>" >&2
+    echo "Usage: ${FUNCNAME[0]} <prefix> <config name> <description>" >&2
     return 1
   fi
 
@@ -35,7 +35,7 @@ _n2038_snapper_delete_snapshot() {
   local config="${1}" && { shift || true; }
   local snapshot_id="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${snapshot_id}" ]; then
-    echo "Usage: _n2038_snapper_delete_snapshot <config name> <snapshot_id>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config name> <snapshot_id>" >&2
     return 1
   fi
 
@@ -50,7 +50,7 @@ _n2038_snapper_create_snapshots_for_all_configs() {
   local prefix="${1}" && { shift || true; }
   local info="${1}" && { shift || true; }
   if [ -z "${prefix}" ] || [ -z "${info}" ]; then
-    echo "Usage: _n2038_snapper_create_snapshots_for_all_configs <prefix> <description>" >&2
+    echo "Usage: ${FUNCNAME[0]} <prefix> <description>" >&2
     return 1
   fi
 
@@ -76,7 +76,7 @@ _n2038_snapper_echo_snapshot_id_for_config() {
   local config="${1}" && { shift || true; }
   local n2038_number="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${n2038_number}" ]; then
-    echo "Usage: _n2038_snapper_echo_snapshot_id_for_config <config> <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
     return 1
   fi
 
@@ -99,7 +99,7 @@ _n2038_snapper_echo_snapshot_description_for_config() {
   local config="${1}" && { shift || true; }
   local n2038_number="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${n2038_number}" ]; then
-    echo "Usage: _n2038_snapper_echo_snapshot_id_for_config <config> <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
     return 1
   fi
 
@@ -152,7 +152,7 @@ n2038_snapper_list_all() {
 
   local config="${1}" && { shift || true; }
   if [ -z "${config}" ]; then
-    echo "Usage: n2038_snapper_list_all <config name>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config name>" >&2
     return 1
   fi
 
@@ -182,7 +182,7 @@ n2038_snapper_create_with_description() {
 
   local description="${1}" && { shift || true; }
   if [ -z "${description}" ]; then
-    echo "Usage: n2038_snapper_create_with_description <description> [prefix=\"${BY_HAND_PREFIX}\"]" >&2
+    echo "Usage: ${FUNCNAME[0]} <description> [prefix=\"${BY_HAND_PREFIX}\"]" >&2
     return 1
   fi
   local prefix="${1:-${BY_HAND_PREFIX}}" && { shift || true; }
@@ -212,7 +212,7 @@ n2038_snapper_goto_n2038_number() {
 
   local n2038_number="${1}" && { shift || true; }
   if [ -z "${n2038_number}" ]; then
-    echo "Usage: n2038_snapper_goto_n2038_number <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <n2038_number>" >&2
     return 1
   fi
 
@@ -275,7 +275,7 @@ n2038_snapper_delete() {
 
   local n2038_number="${1}" && { shift || true; }
   if [ -z "${n2038_number}" ]; then
-    echo "Usage: n2038_snapper_delete <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <n2038_number>" >&2
     return 1
   fi
 
