@@ -140,6 +140,12 @@ function n2038_snapper_goto_raw() {
     echo CONFIRM | ${n2038_sudo_prefix}snapper-rollback "${snapshot_id}" || return "$?"
   # others
   else
+    # Clear old backup
+    if [ -e "${subvolume_raw_path}_old" ]; then
+      # shellcheck disable=SC2086
+      ${n2038_sudo_prefix}rm -Rf "${subvolume_raw_path}_old" || return "$?"
+    fi
+
     # Create backup
     # shellcheck disable=SC2086
     ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}" "${subvolume_raw_path}_old" || return "$?"
