@@ -100,8 +100,9 @@ function f2038_snapper_create_with_description_for_all_configs() {
   local config
   for config in "${configs[@]}"; do
     # shellcheck disable=SC2086
-    ${n2038_sudo_prefix}snapper -c "${config}" create --description "${prefix}${description}" --userdata "tag=${n2038_snapper_userdata_tag},n2038_id=${n2038_id}" || return "$?"
+    ${n2038_sudo_prefix}snapper -c "${config}" create --description "${prefix}${description}" --userdata "n2038_id=${n2038_id}, scope_configs=all, tag=${n2038_snapper_userdata_tag}" || return "$?"
   done
+
   return 0
 }
 

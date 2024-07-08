@@ -62,7 +62,7 @@ source "./_constants"
 source "./_n2038_error_if_snapper_is_not_installed"
 source "./_n2038_snapper_echo_snapshot_description_by_n2038_id"
 source "./_n2038_snapper_echo_snapshot_description_by_raw_id"
-source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_number"
+source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_id"
 source "./n2038_snapper_list_configs"
 
 # (REUSE) Prepare after imports
@@ -77,13 +77,13 @@ source "./n2038_snapper_list_configs"
 }
 
 # Rollback specified config to specified snapshot ID
-function f2038_snapper_goto_raw_id() {
+function f2038_snapper_goto_raw_id_for_one_config() {
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <snapshot id>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <raw id>" >&2
     local list_of_available_configs
     list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     echo "Available configs: ${list_of_available_configs}" >&2
@@ -92,7 +92,7 @@ function f2038_snapper_goto_raw_id() {
 
   local snapshot_id="${1}" && shift
   if [ -z "${snapshot_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <snapshot id>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <raw id>" >&2
     return 1
   fi
 
@@ -170,6 +170,6 @@ function f2038_snapper_goto_raw_id() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    f2038_snapper_goto_raw_id "${@}"
+    f2038_snapper_goto_raw_id_for_one_config "${@}"
   fi
 }

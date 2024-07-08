@@ -60,8 +60,10 @@ source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
 source "./_n2038_error_if_snapper_is_not_installed"
-source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_number"
-source "./n2038_snapper_list_snapshots_n2038_number"
+source "./_n2038_snapper_echo_snapshot_description_by_n2038_id"
+source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_id"
+source "./n2038_snapper_goto_raw_id_for_one_config"
+source "./n2038_snapper_list_configs"
 
 # (REUSE) Prepare after imports
 {
@@ -74,32 +76,31 @@ source "./n2038_snapper_list_snapshots_n2038_number"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Print snapshot description for specified config with specified n2038_number
-function _f2038_snapper_modify_old_snapshots() {
+# Rollback specified config to specified snapshot n2038_number
+function f2038_snapper_goto_n2038_id_for_one_config() {
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 
-  local config="${1}" && { shift || true; }
+  local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
+    local list_of_available_configs
+    list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
+    echo "Available configs: ${list_of_available_configs}" >&2
     return 1
   fi
 
-  local snapshots_n2038_numbers_list
-  snapshots_n2038_numbers_list="$(f2038_snapper_list_snapshots_n2038_number "${config}" | grep 2024 | awk '{print $1}')" || return "$?"
+  local n2038_id="${1}" && shift
+  if [ -z "${n2038_id}" ]; then
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
+    return 1
+  fi
 
-  # Convert to array
-  declare -a snapshots_n2038_numbers
-  mapfile -t snapshots_n2038_numbers <<< "${snapshots_n2038_numbers_list}" || return "$?"
+  local snapshot_id
+  snapshot_id="$(_f2038_snapper_echo_snapshot_raw_id_by_n2038_id "${config}" "${n2038_id}")" || return "$?"
+  echo "Snapshot ID: \"${snapshot_id}\"." >&2
 
-  local n2038_number
-  for n2038_number in "${snapshots_n2038_numbers[@]}"; do
-    local snapshot_raw_id
-    snapshot_raw_id="$(_f2038_snapper_echo_snapshot_raw_id_by_n2038_number "${config}" "${n2038_number}")" || return "$?"
-
-    # shellcheck disable=SC2086
-    ${n2038_sudo_prefix}snapper -c "${config}" modify --userdata "tag=${n2038_snapper_userdata_tag},n2038_id=${n2038_number}" "${snapshot_raw_id}" || return "$?"
-  done
+  f2038_snapper_goto_raw_id_for_one_config "${config}" "${snapshot_id}" || return "$?"
 
   return 0
 }
@@ -107,6 +108,6 @@ function _f2038_snapper_modify_old_snapshots() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _f2038_snapper_modify_old_snapshots "${@}"
+    f2038_snapper_goto_n2038_id_for_one_config "${@}"
   fi
 }

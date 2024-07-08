@@ -80,13 +80,13 @@ function _f2038_snapper_echo_snapshot_description_by_n2038_id() {
   local config="${1}" && { shift || true; }
   local n2038_id="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${n2038_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
     return 1
   fi
 
   local snapshot_description
   # shellcheck disable=SC2086
-  snapshot_description="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,description | sed -En "s/^n2038_id=${n2038_id}, tag=${n2038_snapper_userdata_tag}\\s*[\\|│]\\s*(.+)\\s*\$/\\1/p")" || return "$?"
+  snapshot_description="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,description | sed -En "s/^n2038_id=${n2038_id}.+?[\\|│]\\s*(.+)\\s*\$/\\1/p")" || return "$?"
 
   if [ -z "${snapshot_description}" ]; then
     echo "Snapshot not found!" >&2

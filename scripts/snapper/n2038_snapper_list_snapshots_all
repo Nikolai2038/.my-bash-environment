@@ -73,9 +73,9 @@ source "./n2038_snapper_list_configs"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Prints list of snapshots with n2038_snapper_userdata_tag tag in them for specified config
+# Prints list of all snapshots for specified config
 # Argument 1: Config name
-function f2038_snapper_list_snapshots_n2038_number() {
+function f2038_snapper_list_snapshots_all() {
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 
@@ -95,12 +95,8 @@ function f2038_snapper_list_snapshots_n2038_number() {
   echo "${column_name_1} │ date                │ description"
   echo "============================================================"
 
-  # "nl" to print line numbers
   # shellcheck disable=SC2086
-  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns userdata,date,description \
-    | sed -En "s/tag=${n2038_snapper_userdata_tag}\\s*[\\|│] (.*)\$/\1/p" \
-    | nl --number-width="${#column_name_1}" --number-separator=" │ " \
-    || return "$?"
+  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns number,date,userdata,description || return "$?"
 
   echo "============================================================"
 
@@ -110,6 +106,6 @@ function f2038_snapper_list_snapshots_n2038_number() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    f2038_snapper_list_snapshots_n2038_number "${@}"
+    f2038_snapper_list_snapshots_all "${@}"
   fi
 }

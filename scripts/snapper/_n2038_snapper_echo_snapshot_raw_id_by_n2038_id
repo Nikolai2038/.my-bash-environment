@@ -71,28 +71,28 @@ source "./_n2038_error_if_snapper_is_not_installed"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Print snapshot description for specified config with specified snapshot id
-function _f2038_snapper_echo_snapshot_description_by_raw_id() {
+# Print snapshot id for specified config with specified n2038_number
+function _f2038_snapper_echo_snapshot_raw_id_by_n2038_id() {
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 
   local config="${1}" && { shift || true; }
-  local snapshot_id="${1}" && { shift || true; }
-  if [ -z "${config}" ] || [ -z "${snapshot_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <snapshot_id>" >&2
+  local n2038_id="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${n2038_id}" ]; then
+    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
     return 1
   fi
 
-  local snapshot_description
+  local snapshot_id
   # shellcheck disable=SC2086
-  snapshot_description="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns number,description | sed -En "s/^${snapshot_id}.+?[\\|│]\\s*(.+)\\s*\$/\\1/p")" || return "$?"
+  snapshot_id="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns number,userdata | grep "n2038_id=${n2038_id}," | awk '{print $1}')" || return "$?"
 
-  if [ -z "${snapshot_description}" ]; then
+  if [ -z "${snapshot_id}" ]; then
     echo "Snapshot not found!" >&2
     return 1
   fi
 
-  echo "${snapshot_description}"
+  echo "${snapshot_id}"
 
   return 0
 }
@@ -100,6 +100,6 @@ function _f2038_snapper_echo_snapshot_description_by_raw_id() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _f2038_snapper_echo_snapshot_description_by_raw_id "${@}"
+    _f2038_snapper_echo_snapshot_raw_id_by_n2038_id "${@}"
   fi
 }
