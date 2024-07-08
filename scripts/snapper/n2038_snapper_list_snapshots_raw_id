@@ -97,7 +97,7 @@ function f2038_snapper_list_snapshots_raw_id() {
 
   # "nl" to print line numbers
   # shellcheck disable=SC2086
-  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns number,date,description || return "$?"
+  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns number,date,userdata,description || return "$?"
 
   echo "============================================================"
 
@@ -110,3 +110,12 @@ function f2038_snapper_list_snapshots_raw_id() {
     f2038_snapper_list_snapshots_raw_id "${@}"
   fi
 }
+#desktop
+#documents
+#home
+#music
+#pictures
+#repositories
+#root
+#rootfs
+#vms_shared_folders
