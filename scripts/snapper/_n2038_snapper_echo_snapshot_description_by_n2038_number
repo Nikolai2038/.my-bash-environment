@@ -70,8 +70,8 @@ source "../sudo/_n2038_update_sudo_rights"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Print snapshot id for specified config with specified n2038_number
-function _n2038_snapper_echo_snapshot_id() {
+# Print snapshot description for specified config with specified n2038_number
+function _n2038_snapper_echo_snapshot_description_by_n2038_number() {
   _n2038_error_if_snapper_is_not_installed || return "$?"
   _n2038_update_sudo_rights || return "$?"
 
@@ -82,16 +82,16 @@ function _n2038_snapper_echo_snapshot_id() {
     return 1
   fi
 
-  local snapshot_id
+  local snapshot_description
   # shellcheck disable=SC2086
-  snapshot_id="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,number | sed -En "s/^tag=${n2038_snapper_userdata_tag}\\s*[\\|│]\\s*([0-9]+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1)" || return "$?"
+  snapshot_description="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,description | sed -En "s/^tag=${n2038_snapper_userdata_tag}\\s*[\\|│]\\s*(.+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1)" || return "$?"
 
-  if [ -z "${snapshot_id}" ]; then
+  if [ -z "${snapshot_description}" ]; then
     echo "Snapshot not found!" >&2
     return 1
   fi
 
-  echo "${snapshot_id}"
+  echo "${snapshot_description}"
 
   return 0
 }
@@ -99,6 +99,6 @@ function _n2038_snapper_echo_snapshot_id() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _n2038_snapper_echo_snapshot_id "${@}"
+    _n2038_snapper_echo_snapshot_description_by_n2038_number "${@}"
   fi
 }

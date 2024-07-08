@@ -61,7 +61,8 @@ source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
 source "./_n2038_snapper_echo_snapshot_id"
-source "./_n2038_snapper_echo_snapshot_description"
+source "./_n2038_snapper_echo_snapshot_description_by_n2038_number"
+source "./_n2038_snapper_echo_snapshot_description_by_id"
 
 # (REUSE) Prepare after imports
 {
@@ -81,7 +82,7 @@ function n2038_snapper_goto_raw() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config name> <snapshot id>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <snapshot id>" >&2
     local list_of_available_configs
     list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     echo "Available configs: ${list_of_available_configs}" >&2
@@ -90,7 +91,7 @@ function n2038_snapper_goto_raw() {
 
   local snapshot_id="${1}" && shift
   if [ -z "${snapshot_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config name> <snapshot id>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config> <snapshot id>" >&2
     return 1
   fi
 
@@ -124,10 +125,9 @@ function n2038_snapper_goto_raw() {
 
   echo "Snapshot ID: \"${snapshot_id}\"." >&2
 
-  # TODO: get description from raw id
-  # local snapshot_description
-  # snapshot_description="$(_n2038_snapper_echo_snapshot_description "${config}" "${n2038_number}")" || return "$?"
-  # echo "Snapshot description: \"${snapshot_description}\"." >&2
+  local snapshot_description
+  snapshot_description="$(_n2038_snapper_echo_snapshot_description_by_id "${config}" "${snapshot_id}")" || return "$?"
+  echo "Snapshot description: \"${snapshot_description}\"." >&2
 
   # TODO: Create auto-backup snapshot
   # # We pass empty string for second argument to not add prefix
@@ -135,31 +135,31 @@ function n2038_snapper_goto_raw() {
   # # Because we created snapshots right now, we must increase n2038_number by 1
   # ((n2038_number++))
 
-  # rootfs
-  if [ "${subvolume_path}" = "/" ]; then
-    # shellcheck disable=SC2086
-    echo CONFIRM | ${n2038_sudo_prefix}snapper-rollback "${snapshot_id}" || return "$?"
-  # others
-  else
-    # Clear old backup
-    if [ -e "${subvolume_raw_path}_old" ]; then
-      # shellcheck disable=SC2086
-      ${n2038_sudo_prefix}rm -Rf "${subvolume_raw_path}_old" || return "$?"
-    fi
-
-    # Create backup
-    # shellcheck disable=SC2086
-    ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}" "${subvolume_raw_path}_old" || return "$?"
-
-    # shellcheck disable=SC2086
-    ${n2038_sudo_prefix}btrfs subvolume snapshot "${subvolume_snapshots_raw_path}/${snapshot_id}/snapshot" "${subvolume_raw_path}" || {
-      # Discard changes if something went wrong
-      ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}_old" "${subvolume_raw_path}" || return "$?"
-
-      echo "Something went wrong! Changes were discarded." >&2
-      return 1
-    }
-  fi
+#  # rootfs
+#  if [ "${subvolume_path}" = "/" ]; then
+#    # shellcheck disable=SC2086
+#    echo CONFIRM | ${n2038_sudo_prefix}snapper-rollback "${snapshot_id}" || return "$?"
+#  # others
+#  else
+#    # Clear old backup
+#    if [ -e "${subvolume_raw_path}_old" ]; then
+#      # shellcheck disable=SC2086
+#      ${n2038_sudo_prefix}rm -Rf "${subvolume_raw_path}_old" || return "$?"
+#    fi
+#
+#    # Create backup
+#    # shellcheck disable=SC2086
+#    ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}" "${subvolume_raw_path}_old" || return "$?"
+#
+#    # shellcheck disable=SC2086
+#    ${n2038_sudo_prefix}btrfs subvolume snapshot "${subvolume_snapshots_raw_path}/${snapshot_id}/snapshot" "${subvolume_raw_path}" || {
+#      # Discard changes if something went wrong
+#      ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}_old" "${subvolume_raw_path}" || return "$?"
+#
+#      echo "Something went wrong! Changes were discarded." >&2
+#      return 1
+#    }
+#  fi
 
   echo "Success! Now you have to reboot to apply changes!" >&2
 
