@@ -60,7 +60,6 @@ source "./n2038_snapper_list_configs"
 source "../sudo/_n2038_set_sudo_prefix"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
-source "../_constants"
 
 # (REUSE) Prepare after imports
 {
@@ -76,15 +75,15 @@ source "../_constants"
 # Prints list of snapshots with n2038_snapper_userdata_tag tag in them
 # Argument 1: Config name
 function n2038_snapper_list_custom() {
-  _n2038_error_if_snapper_is_not_installed || eval "${n2038_eval_for_return}"
-  _n2038_set_sudo_prefix || eval "${n2038_eval_for_return}"
-  _n2038_update_sudo_rights || eval "${n2038_eval_for_return}"
+  _n2038_error_if_snapper_is_not_installed || return "$?"
+  _n2038_set_sudo_prefix || return "$?"
+  _n2038_update_sudo_rights || return "$?"
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
     echo "Usage: n2038_snapper_list_custom <config name>" >&2
     local list_of_available_configs
-    list_of_available_configs="$(n2038_snapper_list_co2nfigs | tr '\n' ' ')" || eval "${n2038_eval_for_return}"
+    list_of_available_configs="$(n2038_snapper_list_co2nfigs | tr '\n' ' ')" || return "$?"
     echo "Available configs: ${list_of_available_configs}" >&2
     return 1
   fi
