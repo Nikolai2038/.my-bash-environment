@@ -60,9 +60,9 @@ source "./n2038_snapper_list_configs"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
-source "./_n2038_snapper_echo_snapshot_id"
+source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_number"
 source "./_n2038_snapper_echo_snapshot_description_by_n2038_number"
-source "./_n2038_snapper_echo_snapshot_description_by_id"
+source "./_n2038_snapper_echo_snapshot_description_by_raw_id"
 
 # (REUSE) Prepare after imports
 {
@@ -76,7 +76,7 @@ source "./_n2038_snapper_echo_snapshot_description_by_id"
 }
 
 # Rollback specified config to specified snapshot ID
-function n2038_snapper_goto_raw() {
+function n2038_snapper_goto_raw_id() {
   _n2038_error_if_snapper_is_not_installed || return "$?"
   _n2038_update_sudo_rights || return "$?"
 
@@ -126,7 +126,7 @@ function n2038_snapper_goto_raw() {
   echo "Snapshot ID: \"${snapshot_id}\"." >&2
 
   local snapshot_description
-  snapshot_description="$(_n2038_snapper_echo_snapshot_description_by_id "${config}" "${snapshot_id}")" || return "$?"
+  snapshot_description="$(_n2038_snapper_echo_snapshot_description_by_raw_id "${config}" "${snapshot_id}")" || return "$?"
   echo "Snapshot description: \"${snapshot_description}\"." >&2
 
   # TODO: Create auto-backup snapshot
@@ -169,6 +169,6 @@ function n2038_snapper_goto_raw() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    n2038_snapper_goto_raw "${@}"
+    n2038_snapper_goto_raw_id "${@}"
   fi
 }

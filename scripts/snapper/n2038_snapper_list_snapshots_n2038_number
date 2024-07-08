@@ -60,8 +60,6 @@ source "./n2038_snapper_list_configs"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
-source "./_n2038_snapper_echo_snapshot_id"
-source "./_n2038_snapper_echo_snapshot_description_by_n2038_number"
 
 # (REUSE) Prepare after imports
 {
@@ -74,89 +72,36 @@ source "./_n2038_snapper_echo_snapshot_description_by_n2038_number"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Rollback specified config to specified snapshot n2038_number
-function n2038_snapper_goto_custom() {
+# Prints list of snapshots with n2038_snapper_userdata_tag tag in them for specified config
+# Argument 1: Config name
+function n2038_snapper_list_snapshots_n2038_number() {
   _n2038_error_if_snapper_is_not_installed || return "$?"
   _n2038_update_sudo_rights || return "$?"
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
+    echo "Usage: ${FUNCNAME[0]} <config>" >&2
     local list_of_available_configs
     list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     echo "Available configs: ${list_of_available_configs}" >&2
     return 1
   fi
 
-  local n2038_number="${1}" && shift
-  if [ -z "${n2038_number}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
-    return 1
-  fi
+  local column_name_1="${n2038_snapper_userdata_tag}_number"
+  # Use sudo here to get password before any output
+  # shellcheck disable=SC2086
+  echo "============================================================"
+  echo "${column_name_1} │ date                │ description"
+  echo "============================================================"
 
-  local subvolume_path
-  subvolume_path="$(sudo sed -En 's/^SUBVOLUME="(.+?)"$/\1/p' "/etc/snapper/configs/${config}")" || return "$?"
-  echo "Subvolume path: \"${subvolume_path}\"." >&2
+  # "nl" to print line numbers
+  # shellcheck disable=SC2086
+  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns userdata,date,description \
+    | sed -En "s/tag=${n2038_snapper_userdata_tag}\\s*[\\|│] (.*)\$/\1/p" \
+    | nl --number-width="${#column_name_1}" --number-separator=" │ " \
+    || return "$?"
 
-  local subvolume_name
-  subvolume_name="$(sed -En "s#^UUID=([^[:blank:]]+).+?[[:blank:]]+${subvolume_path}[[:blank:]]+btrfs[[:blank:]]+.+?subvol=([^[:blank:]]+).*\$#\\2#p" /etc/fstab)" || return "$?"
-  echo "Subvolume name: \"${subvolume_name}\"." >&2
-
-  local subvolume_uuid
-  subvolume_uuid="$(sed -En "s#^UUID=([^[:blank:]]+).+?[[:blank:]]+${subvolume_path}[[:blank:]]+btrfs[[:blank:]]+.+?subvol=([^[:blank:]]+).*\$#\\1#p" /etc/fstab)" || return "$?"
-  echo "Subvolume UUID: \"${subvolume_uuid}\"." >&2
-
-  local subvolume_raw_path_prefix
-  subvolume_raw_path_prefix="$(grep -v 'subvol=' /etc/fstab | sed -En "s#^UUID=${subvolume_uuid}.+?[[:blank:]]+([^[:blank:]]+)[[:blank:]]+btrfs[[:blank:]]+.+?\$#\\1#p")" || return "$?"
-  local subvolume_raw_path="${subvolume_raw_path_prefix}/${subvolume_name}" || return "$?"
-  echo "Subvolume raw path: \"${subvolume_raw_path}\"." >&2
-  if [ ! -e "${subvolume_raw_path}" ]; then
-    echo "Subvolume raw path \"${subvolume_raw_path}\" does not exist!" >&2
-    return 1
-  fi
-
-  local subvolume_snapshots_raw_path="${subvolume_raw_path_prefix}/${subvolume_name}-snapshots" || return "$?"
-  echo "Subvolume snapshots raw path: \"${subvolume_snapshots_raw_path}\"." >&2
-  if [ ! -e "${subvolume_snapshots_raw_path}" ]; then
-    echo "Subvolume snapshots raw path \"${subvolume_snapshots_raw_path}\" does not exist!" >&2
-    return 1
-  fi
-
-  local snapshot_id
-  snapshot_id="$(_n2038_snapper_echo_snapshot_id "${config}" "${n2038_number}")" || return "$?"
-  echo "Snapshot ID: \"${snapshot_id}\"." >&2
-
-  local snapshot_description
-  snapshot_description="$(_n2038_snapper_echo_snapshot_description_by_n2038_number "${config}" "${n2038_number}")" || return "$?"
-  echo "Snapshot description: \"${snapshot_description}\"." >&2
-
-  # TODO: Create auto-backup snapshot
-  # # We pass empty string for second argument to not add prefix
-  # n2038_snapper_create_with_description "Auto-backup before restoring to #${n2038_number} \"${snapshot_description//"${BY_HAND_PREFIX}"/}\"" "" || return "$?"
-  # # Because we created snapshots right now, we must increase n2038_number by 1
-  # ((n2038_number++))
-
-  # rootfs
-  if [ "${subvolume_path}" = "/" ]; then
-    # shellcheck disable=SC2086
-    echo CONFIRM | ${n2038_sudo_prefix}snapper-rollback "${snapshot_id}" || return "$?"
-  # others
-  else
-    # Create backup
-    # shellcheck disable=SC2086
-    ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}" "${subvolume_raw_path}_old" || return "$?"
-
-    # shellcheck disable=SC2086
-    ${n2038_sudo_prefix}btrfs subvolume snapshot "${subvolume_snapshots_raw_path}/${snapshot_id}/snapshot" "${subvolume_raw_path}" || {
-      # Discard changes if something went wrong
-      ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}_old" "${subvolume_raw_path}" || return "$?"
-
-      echo "Something went wrong! Changes were discarded." >&2
-      return 1
-    }
-  fi
-
-  echo "Success! Now you have to reboot to apply changes!" >&2
+  echo "============================================================"
 
   return 0
 }
@@ -164,6 +109,6 @@ function n2038_snapper_goto_custom() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    n2038_snapper_goto_custom "${@}"
+    n2038_snapper_list_snapshots_n2038_number "${@}"
   fi
 }
