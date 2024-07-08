@@ -55,11 +55,7 @@
 }
 
 # Imports
-source "./_n2038_error_if_snapper_is_not_installed"
-source "./n2038_snapper_list_configs"
-source "../sudo/_constants"
-source "../sudo/_n2038_update_sudo_rights"
-source "./_constants"
+# ...
 
 # (REUSE) Prepare after imports
 {
@@ -72,43 +68,21 @@ source "./_constants"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Prints list of snapshots with n2038_snapper_userdata_tag tag in them
-# Argument 1: Config name
-function n2038_snapper_list_custom() {
-  _n2038_error_if_snapper_is_not_installed || return "$?"
-  _n2038_update_sudo_rights || return "$?"
-
-  local config="${1}" && shift
-  if [ -z "${config}" ]; then
-    echo "Usage: n2038_snapper_list_custom <config name>" >&2
-    local list_of_available_configs
-    list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    echo "Available configs: ${list_of_available_configs}" >&2
-    return 1
+# Checks, if user is root and modifies n2038_sudo_prefix environment variable
+{
+  # Second condition is for MINGW in Windows - MSYSTEM will be set.
+  if [ "$(id --user "$(whoami)")" = "0" ] || [ -n "${MSYSTEM}" ]; then
+    # bashsupport disable=BP2001
+    n2038_sudo_prefix=""
+  else
+    n2038_sudo_prefix="sudo "
   fi
-
-  local column_name_1="${n2038_snapper_userdata_tag}_number"
-  # Use sudo here to get password before any output
-  # shellcheck disable=SC2086
-  echo "============================================================"
-  echo "${column_name_1} │ date                │ description"
-  echo "============================================================"
-
-  # "nl" to print line numbers
-  # shellcheck disable=SC2086
-  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns userdata,date,description \
-    | sed -En "s/tag=${n2038_snapper_userdata_tag}\\s*[\\|│] (.*)\$/\1/p" \
-    | nl --number-width="${#column_name_1}" --number-separator=" │ " \
-    || return "$?"
-
-  echo "============================================================"
-
-  return 0
+  export n2038_sudo_prefix
 }
 
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    n2038_snapper_list_custom "${@}"
+    _constants "${@}"
   fi
 }

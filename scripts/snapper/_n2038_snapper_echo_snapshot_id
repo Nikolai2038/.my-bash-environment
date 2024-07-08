@@ -55,7 +55,9 @@
 }
 
 # Imports
-# ...
+source "./_n2038_error_if_snapper_is_not_installed"
+source "../sudo/_constants"
+source "../sudo/_n2038_update_sudo_rights"
 
 # (REUSE) Prepare after imports
 {
@@ -68,22 +70,35 @@
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Checks, if user is root and modifies N2038_SUDO_PREFIX environment variable
-function _n2038_set_sudo_prefix() {
-  # Second condition is for MINGW in Windows - MSYSTEM will be set.
-  if [ "$(id --user "$(whoami)")" = "0" ] || [ -n "${MSYSTEM}" ]; then
-    # bashsupport disable=BP2001
-    N2038_SUDO_PREFIX=""
-  else
-    N2038_SUDO_PREFIX="sudo "
+# Print snapshot id for specified config and description with n2038_number
+function _n2038_snapper_echo_snapshot_id() {
+  _n2038_error_if_snapper_is_not_installed || return "$?"
+  _n2038_update_sudo_rights || return "$?"
+
+  local config="${1}" && { shift || true; }
+  local n2038_number="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${n2038_number}" ]; then
+    echo "Usage: n2038_snapper_echo_snapshot_id <config> <n2038_number>" >&2
+    return 1
   fi
-  export N2038_SUDO_PREFIX
+
+  local snapshot_id
+  # shellcheck disable=SC2086
+  snapshot_id="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,number | sed -En "s/^tag=${n2038_snapper_userdata_tag}\\s*[\\|│]\\s*([0-9]+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1)" || return "$?"
+
+  if [ -z "${snapshot_id}" ]; then
+    echo "Snapshot not found!" >&2
+    return 1
+  fi
+
+  echo "${snapshot_id}"
+
   return 0
 }
 
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _n2038_set_sudo_prefix "${@}"
+    _n2038_snapper_echo_snapshot_id "${@}"
   fi
 }

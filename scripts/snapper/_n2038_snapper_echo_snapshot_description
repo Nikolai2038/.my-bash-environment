@@ -56,10 +56,8 @@
 
 # Imports
 source "./_n2038_error_if_snapper_is_not_installed"
-source "./n2038_snapper_list_configs"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
-source "./_constants"
 
 # (REUSE) Prepare after imports
 {
@@ -72,36 +70,28 @@ source "./_constants"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Prints list of snapshots with n2038_snapper_userdata_tag tag in them
-# Argument 1: Config name
-function n2038_snapper_list_custom() {
+# Print snapshot description for specified config and description with n2038_number
+function _n2038_snapper_echo_snapshot_description() {
   _n2038_error_if_snapper_is_not_installed || return "$?"
   _n2038_update_sudo_rights || return "$?"
 
-  local config="${1}" && shift
-  if [ -z "${config}" ]; then
-    echo "Usage: n2038_snapper_list_custom <config name>" >&2
-    local list_of_available_configs
-    list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    echo "Available configs: ${list_of_available_configs}" >&2
+  local config="${1}" && { shift || true; }
+  local n2038_number="${1}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${n2038_number}" ]; then
+    echo "Usage: n2038_snapper_echo_snapshot_description <config> <n2038_number>" >&2
     return 1
   fi
 
-  local column_name_1="${n2038_snapper_userdata_tag}_number"
-  # Use sudo here to get password before any output
+  local snapshot_description
   # shellcheck disable=SC2086
-  echo "============================================================"
-  echo "${column_name_1} │ date                │ description"
-  echo "============================================================"
+  snapshot_description="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,description | sed -En "s/^tag=${n2038_snapper_userdata_tag}\\s*[\\|│]\\s*(.+)\\s*\$/\\1/p" | head -n "${n2038_number}" | tail -n 1)" || return "$?"
 
-  # "nl" to print line numbers
-  # shellcheck disable=SC2086
-  ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns userdata,date,description \
-    | sed -En "s/tag=${n2038_snapper_userdata_tag}\\s*[\\|│] (.*)\$/\1/p" \
-    | nl --number-width="${#column_name_1}" --number-separator=" │ " \
-    || return "$?"
+  if [ -z "${snapshot_description}" ]; then
+    echo "Snapshot not found!" >&2
+    return 1
+  fi
 
-  echo "============================================================"
+  echo "${snapshot_description}"
 
   return 0
 }
@@ -109,6 +99,6 @@ function n2038_snapper_list_custom() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    n2038_snapper_list_custom "${@}"
+    _n2038_snapper_echo_snapshot_description "${@}"
   fi
 }
