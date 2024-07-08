@@ -3,7 +3,8 @@
 # (REUSE)
 # Code that must be included in every script to make it fully independent and compatible with refactoring in IDEs.
 # Advices for code writing:
-# - It is recommended to use lower case variables' names, cause some IDE ignore "not found variables" errors if they are upper cased.
+# - It is recommended to use lower case variables' names, cause some IDE ignore "not found variables" errors if they are upper cased;
+# - File names and function names in them must differ, cause some IDE sourcing them for completion, if they are exact.
 {
   # Fail command if any of pipeline blocks fail
   set -o pipefail
@@ -55,13 +56,13 @@
 }
 
 # Imports
-source "./_n2038_error_if_snapper_is_not_installed"
-source "./n2038_snapper_list_configs"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
-source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_number"
+source "./_n2038_error_if_snapper_is_not_installed"
 source "./_n2038_snapper_echo_snapshot_description_by_n2038_number"
+source "./_n2038_snapper_echo_snapshot_raw_id_by_n2038_number"
+source "./n2038_snapper_list_configs"
 
 # (REUSE) Prepare after imports
 {
@@ -75,15 +76,15 @@ source "./_n2038_snapper_echo_snapshot_description_by_n2038_number"
 }
 
 # Rollback specified config to specified snapshot n2038_number
-function n2038_snapper_goto_n2038_number() {
-  _n2038_error_if_snapper_is_not_installed || return "$?"
-  _n2038_update_sudo_rights || return "$?"
+function f2038_snapper_goto_n2038_number() {
+  _f2038_error_if_snapper_is_not_installed || return "$?"
+  _f2038_update_sudo_rights || return "$?"
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
     echo "Usage: ${FUNCNAME[0]} <config> <n2038_number>" >&2
     local list_of_available_configs
-    list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
+    list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     echo "Available configs: ${list_of_available_configs}" >&2
     return 1
   fi
@@ -123,11 +124,11 @@ function n2038_snapper_goto_n2038_number() {
   fi
 
   local snapshot_id
-  snapshot_id="$(_n2038_snapper_echo_snapshot_raw_id_by_n2038_number "${config}" "${n2038_number}")" || return "$?"
+  snapshot_id="$(_f2038_snapper_echo_snapshot_raw_id_by_n2038_number "${config}" "${n2038_number}")" || return "$?"
   echo "Snapshot ID: \"${snapshot_id}\"." >&2
 
   local snapshot_description
-  snapshot_description="$(_n2038_snapper_echo_snapshot_description_by_n2038_number "${config}" "${n2038_number}")" || return "$?"
+  snapshot_description="$(_f2038_snapper_echo_snapshot_description_by_n2038_number "${config}" "${n2038_number}")" || return "$?"
   echo "Snapshot description: \"${snapshot_description}\"." >&2
 
   # TODO: Create auto-backup snapshot
@@ -164,6 +165,6 @@ function n2038_snapper_goto_n2038_number() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    n2038_snapper_goto_n2038_number "${@}"
+    f2038_snapper_goto_n2038_number "${@}"
   fi
 }

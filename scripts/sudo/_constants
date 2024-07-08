@@ -3,7 +3,8 @@
 # (REUSE)
 # Code that must be included in every script to make it fully independent and compatible with refactoring in IDEs.
 # Advices for code writing:
-# - It is recommended to use lower case variables' names, cause some IDE ignore "not found variables" errors if they are upper cased.
+# - It is recommended to use lower case variables' names, cause some IDE ignore "not found variables" errors if they are upper cased;
+# - File names and function names in them must differ, cause some IDE sourcing them for completion, if they are exact.
 {
   # Fail command if any of pipeline blocks fail
   set -o pipefail
@@ -78,11 +79,4 @@
     n2038_sudo_prefix="sudo "
   fi
   export n2038_sudo_prefix
-}
-
-# Add the ability to execute this script by itself (for debugging)
-{
-  if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _constants "${@}"
-  fi
 }
