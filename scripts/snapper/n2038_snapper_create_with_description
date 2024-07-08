@@ -56,7 +56,10 @@
 }
 
 # Imports
-# ...
+source "../sudo/_constants"
+source "../sudo/_n2038_update_sudo_rights"
+source "./_constants"
+source "./_n2038_error_if_snapper_is_not_installed"
 
 # (REUSE) Prepare after imports
 {
@@ -69,12 +72,28 @@
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Constants (it is recommended to use lower case for them, cause some IDE ignore "not found variables" errors if it is upper cased):
-{
-  if [ -z "${n2038_snapper_userdata_tag}" ]; then
-    export n2038_snapper_userdata_tag="n2038"
+# Create new snapshot with specified description for specified config
+function n2038_snapper_create_with_description() {
+  _f2038_error_if_snapper_is_not_installed || return "$?"
+  _f2038_update_sudo_rights || return "$?"
+
+  local config="${1}" && { shift || true; }
+  local description="${1}" && { shift || true; }
+  local prefix="${1:-${n2038_by_hand_prefix}}" && { shift || true; }
+  if [ -z "${config}" ] || [ -z "${description}" ]; then
+    echo "Usage: ${FUNCNAME[0]} <config> <description> [prefix=\"${n2038_by_hand_prefix}\"]" >&2
+    return 1
   fi
-  if [ -z "${n2038_by_hand_prefix}" ]; then
-    export n2038_by_hand_prefix="BY HAND: "
+
+  # shellcheck disable=SC2086
+  ${n2038_sudo_prefix}snapper -c "${config}" create --description "${prefix}${description}" --userdata "tag=${n2038_snapper_userdata_tag}" || return "$?"
+
+  return 0
+}
+
+# Add the ability to execute this script by itself (for debugging)
+{
+  if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
+    n2038_snapper_create_with_description "${@}"
   fi
 }
