@@ -60,6 +60,7 @@ source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
 source "./_n2038_error_if_snapper_is_not_installed"
+source "./n2038_snapper_list_configs"
 
 # (REUSE) Prepare after imports
 {
@@ -72,28 +73,41 @@ source "./_n2038_error_if_snapper_is_not_installed"
   unset "source_previous_directory_$(get_text_hash "${BASH_SOURCE[*]}")" || exit "$?"
 }
 
-# Create new snapshot with specified description for specified config
-function n2038_snapper_create_with_description() {
+# Creates snapshots for all Snapper configs
+function f2038_snapper_create_with_description_for_all_configs() {
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 
-  local config="${1}" && { shift || true; }
   local description="${1}" && { shift || true; }
   local prefix="${1:-${n2038_by_hand_prefix}}" && { shift || true; }
-  if [ -z "${config}" ] || [ -z "${description}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <description> [prefix=\"${n2038_by_hand_prefix}\"]" >&2
+  if [ -z "${description}" ]; then
+    echo "Usage: ${FUNCNAME[0]} <description> [prefix=\"${n2038_by_hand_prefix}\"]" >&2
     return 1
   fi
 
-  # shellcheck disable=SC2086
-  ${n2038_sudo_prefix}snapper -c "${config}" create --description "${prefix}${description}" --userdata "tag=${n2038_snapper_userdata_tag}" || return "$?"
+  # Get configs as list
+  local configs_list
+  configs_list="$(f2038_snapper_list_configs)"
 
+  # Convert to array
+  declare -a configs
+  mapfile -t configs <<< "${configs_list}" || return "$?"
+
+  local n2038_id
+  n2038_id="$(date +%s%N)" || return "$?"
+
+  # Create snapshot for each config
+  local config
+  for config in "${configs[@]}"; do
+    # shellcheck disable=SC2086
+    ${n2038_sudo_prefix}snapper -c "${config}" create --description "${prefix}${description}" --userdata "tag=${n2038_snapper_userdata_tag},n2038_id=${n2038_id}" || return "$?"
+  done
   return 0
 }
 
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    n2038_snapper_create_with_description "${@}"
+    f2038_snapper_create_with_description_for_all_configs "${@}"
   fi
 }
