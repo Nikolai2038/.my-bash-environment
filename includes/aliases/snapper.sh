@@ -119,7 +119,7 @@ _n2038_snapper_echo_snapshot_description_for_config() {
 
 # Print a list of keyword snapshots with n2038_number value
 n2038_snapper_list() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -145,7 +145,7 @@ n2038_snapper_list() {
 
 # Print a list of all snapshots of specified Snapper config
 n2038_snapper_list_all() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -164,7 +164,7 @@ n2038_snapper_list_all() {
 
 # Print a list of existing Snapper configs
 n2038_snapper_list_configs() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -175,7 +175,7 @@ n2038_snapper_list_configs() {
 
 # Creates snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 n2038_snapper_create_with_description() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -205,7 +205,7 @@ n2038_snapper_create_with_description() {
 # Apply the specified snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 # shellcheck disable=SC2086
 n2038_snapper_goto_n2038_number() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -258,7 +258,7 @@ n2038_snapper_goto_n2038_number() {
 
   # rootfs
   local snapshot_id_for_rootfs
-  snapshot_id_for_rootfs="$(_n2038_snapper_echo_snapshot_id_for_config "rootfs" "${n2038_number}" "${description}")"
+  snapshot_id_for_rootfs="$(_n2038_snapper_echo_snapshot_id_for_config "rootfs" "${n2038_number}")"
   echo CONFIRM | ${sudo_prefix}snapper-rollback "${snapshot_id_for_rootfs}" || return "$?"
 
   ${sudo_prefix}reboot || return "$?"
@@ -268,7 +268,7 @@ n2038_snapper_goto_n2038_number() {
 
 # Delete snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 n2038_snapper_delete() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -299,7 +299,7 @@ n2038_snapper_delete() {
 
 # Delete all boot snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 n2038_snapper_delete_all_boot() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi
@@ -322,7 +322,7 @@ n2038_snapper_delete_all_boot() {
 
 # Delete all automated (not by hand) snapshots for main Snapper configs (which for me are: "rootfs", "home" and "root")
 n2038_snapper_delete_all_not_by_hand() {
-  if ! bat --help > /dev/null 2>&1; then
+  if ! snapper --help > /dev/null 2>&1; then
     echo "Snapper is not installed!" >&2
     return 1
   fi

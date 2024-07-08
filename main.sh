@@ -359,6 +359,7 @@ if { su --help | grep 'whitelist-environment'; } > /dev/null 2>&1; then
   alias su='su --whitelist-environment=PS_TREE_MINUS'
 fi
 
-# To use aliases in sudo too we add alias for it with space
-alias sudo="sudo --preserve-env=PS_TREE_MINUS "
+# TODO: Some problems with that - disabled for now
+# # To use aliases in sudo too we add alias for it with space
+# alias sudo="sudo --preserve-env=PS_TREE_MINUS "
 # ========================================
