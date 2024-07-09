@@ -320,8 +320,6 @@ fi
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/ls.sh"
 # shellcheck source=./includes/aliases/pacman_and_yay.sh
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/pacman_and_yay.sh"
-# shellcheck source=./includes/aliases/snapper.sh
-. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/snapper.sh"
 # shellcheck source=./includes/aliases/other.sh
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/other.sh"
 

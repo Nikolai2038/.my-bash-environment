@@ -23,6 +23,24 @@ REPOSITORY_URL="https://github.com/Nikolai2038/.my-bash-environment.git"
 N2038_POSTFIX=" # n2038 .my-bash-environment"
 # ----------------------------------------
 
+
+# ----------------------------------------
+# Add all scripts to PATH
+# ----------------------------------------
+directories_with_scripts="$(find "${DIRECTORY_WITH_SCRIPTS}/scripts" -type d)"
+
+# Convert to array
+declare -a directories_with_scripts_array
+mapfile -t directories_with_scripts_array <<< "${directories_with_scripts}"
+
+# Add to PATH
+for directory_with_scripts in "${directories_with_scripts_array[@]}"; do
+  PATH="${directory_with_scripts}:${PATH}"
+done
+export PATH
+# ----------------------------------------
+
+
 # ----------------------------------------
 # Calculations
 # ----------------------------------------
