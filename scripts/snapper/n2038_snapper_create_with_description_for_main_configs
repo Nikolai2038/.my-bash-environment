@@ -78,7 +78,7 @@ function f2038_snapper_create_with_description_for_main_configs() {
   _f2038_update_sudo_rights || return "$?"
 
   local description="${1}" && { shift || true; }
-  local prefix="${1:-${n2038_by_hand_prefix}}" && { shift || true; }
+  local prefix="${1-${n2038_by_hand_prefix}}" && { shift || true; }
   if [ -z "${description}" ]; then
     echo "Usage: ${FUNCNAME[0]} <description> [prefix=\"${n2038_by_hand_prefix}\"]" >&2
     return 1

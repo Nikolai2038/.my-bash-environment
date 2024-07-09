@@ -79,7 +79,7 @@ function f2038_snapper_create_with_description_for_one_config() {
 
   local config="${1}" && { shift || true; }
   local description="${1}" && { shift || true; }
-  local prefix="${1:-${n2038_by_hand_prefix}}" && { shift || true; }
+  local prefix="${1-${n2038_by_hand_prefix}}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${description}" ]; then
     echo "Usage: ${FUNCNAME[0]} <config> <description> [prefix=\"${n2038_by_hand_prefix}\"]" >&2
     return 1
