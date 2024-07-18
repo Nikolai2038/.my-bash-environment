@@ -71,8 +71,9 @@
 
 # Simply updates sudo rights for terminal session
 function _f2038_update_sudo_rights() {
+  # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
-    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+    echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
   fi
 
   sudo echo -n "" > /dev/null || return "$?"

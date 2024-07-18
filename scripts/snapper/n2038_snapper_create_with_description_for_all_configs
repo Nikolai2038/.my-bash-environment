@@ -76,8 +76,9 @@ source "./n2038_snapper_list_configs"
 
 # Creates snapshots for all Snapper configs
 function f2038_snapper_create_with_description_for_all_configs() {
+  # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
-    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+    echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
   fi
 
   _f2038_error_if_snapper_is_not_installed || return "$?"

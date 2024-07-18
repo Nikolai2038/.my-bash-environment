@@ -71,8 +71,9 @@ source "../_messages"
 
 # Returns 0 if Snapper is installed, and returns 1 - if Snapper is not installed
 function _f2038_error_if_snapper_is_not_installed() {
+  # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
-    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+    echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
   fi
 
   if ! snapper --help > /dev/null 2>&1; then
