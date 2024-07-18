@@ -90,52 +90,52 @@ function n2038_snapper_goto_raw_id_for_one_config() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config> <raw id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config> <raw id>${c_return}" || return "$?"
     local list_of_available_configs
     list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    print_info "Available configs: ${list_of_available_configs}" || return "$?"
+    print_info "Available configs: ${c_highlight}${list_of_available_configs}${c_return}" || return "$?"
     return 1
   fi
 
   local snapshot_id="${1}" && shift
   if [ -z "${snapshot_id}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config> <raw id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config> <raw id>${c_return}" || return "$?"
     return 1
   fi
 
   local subvolume_path
   subvolume_path="$(sudo sed -En 's/^SUBVOLUME="(.+?)"$/\1/p' "/etc/snapper/configs/${config}")" || return "$?"
-  print_info "Subvolume path: \"${subvolume_path}\"." || return "$?"
+  print_info "Subvolume path: \"${c_highlight}${subvolume_path}${c_return}\"." || return "$?"
 
   local subvolume_name
   subvolume_name="$(sed -En "s#^UUID=([^[:blank:]]+).+?[[:blank:]]+${subvolume_path}[[:blank:]]+btrfs[[:blank:]]+.+?subvol=([^[:blank:]]+).*\$#\\2#p" /etc/fstab)" || return "$?"
-  print_info "Subvolume name: \"${subvolume_name}\"." || return "$?"
+  print_info "Subvolume name: \"${c_highlight}${subvolume_name}${c_return}\"." || return "$?"
 
   local subvolume_uuid
   subvolume_uuid="$(sed -En "s#^UUID=([^[:blank:]]+).+?[[:blank:]]+${subvolume_path}[[:blank:]]+btrfs[[:blank:]]+.+?subvol=([^[:blank:]]+).*\$#\\1#p" /etc/fstab)" || return "$?"
-  print_info "Subvolume UUID: \"${subvolume_uuid}\"." || return "$?"
+  print_info "Subvolume UUID: \"${c_highlight}${subvolume_uuid}${c_return}\"." || return "$?"
 
   local subvolume_raw_path_prefix
   subvolume_raw_path_prefix="$(grep -v 'subvol=' /etc/fstab | sed -En "s#^UUID=${subvolume_uuid}.+?[[:blank:]]+([^[:blank:]]+)[[:blank:]]+btrfs[[:blank:]]+.+?\$#\\1#p")" || return "$?"
   local subvolume_raw_path="${subvolume_raw_path_prefix}/${subvolume_name}" || return "$?"
-  print_info "Subvolume raw path: \"${subvolume_raw_path}\"." || return "$?"
+  print_info "Subvolume raw path: \"${c_highlight}${subvolume_raw_path}${c_return}\"." || return "$?"
   if [ ! -e "${subvolume_raw_path}" ]; then
-    print_info "Subvolume raw path \"${subvolume_raw_path}\" does not exist!" || return "$?"
+    print_info "Subvolume raw path \"${c_highlight}${subvolume_raw_path}${c_return}\" does not exist!" || return "$?"
     return 1
   fi
 
   local subvolume_snapshots_raw_path="${subvolume_raw_path_prefix}/${subvolume_name}-snapshots" || return "$?"
-  print_info "Subvolume snapshots raw path: \"${subvolume_snapshots_raw_path}\"." || return "$?"
+  print_info "Subvolume snapshots raw path: \"${c_highlight}${subvolume_snapshots_raw_path}${c_return}\"." || return "$?"
   if [ ! -e "${subvolume_snapshots_raw_path}" ]; then
-    print_info "Subvolume snapshots raw path \"${subvolume_snapshots_raw_path}\" does not exist!" || return "$?"
+    print_info "Subvolume snapshots raw path \"${c_highlight}${subvolume_snapshots_raw_path}${c_return}\" does not exist!" || return "$?"
     return 1
   fi
 
-  print_info "Snapshot ID: \"${snapshot_id}\"." || return "$?"
+  print_info "Snapshot ID: \"${c_highlight}${snapshot_id}${c_return}\"." || return "$?"
 
   local snapshot_description
   snapshot_description="$(_n2038_snapper_echo_snapshot_description_by_raw_id "${config}" "${snapshot_id}")" || return "$?"
-  print_info "Snapshot description: \"${snapshot_description}\"." || return "$?"
+  print_info "Snapshot description: \"${c_highlight}${snapshot_description}${c_return}\"." || return "$?"
 
   # Create auto-backup snapshot
   # We pass empty string for second argument to not add prefix

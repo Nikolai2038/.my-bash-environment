@@ -87,7 +87,7 @@ function n2038_snapper_create_with_description_for_all_configs() {
   local description="${1}" && { shift || true; }
   local prefix="${1-${n2038_by_hand_prefix}}" && { shift || true; }
   if [ -z "${description}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <description> [prefix=\"${n2038_by_hand_prefix}\"]" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <description> [prefix=\"${n2038_by_hand_prefix}\"]${c_return}" || return "$?"
     return 1
   fi
 

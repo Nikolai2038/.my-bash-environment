@@ -89,16 +89,16 @@ function n2038_snapper_goto_n2038_id_for_one_config() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config> <n2038_id>${c_return}" || return "$?"
     local list_of_available_configs
     list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    print_info "Available configs: ${list_of_available_configs}" || return "$?"
+    print_info "Available configs: ${c_highlight}${list_of_available_configs}${c_return}" || return "$?"
     return 1
   fi
 
   local n2038_id="${1}" && shift
   if [ -z "${n2038_id}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config> <n2038_id>${c_return}" || return "$?"
     return 1
   fi
 

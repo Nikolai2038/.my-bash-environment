@@ -90,7 +90,7 @@ function n2038_snapper_goto_n2038_id_for_all_configs() {
 
   local n2038_id="${1}" && shift
   if [ -z "${n2038_id}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <n2038_id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <n2038_id>${c_return}" || return "$?"
     return 1
   fi
 

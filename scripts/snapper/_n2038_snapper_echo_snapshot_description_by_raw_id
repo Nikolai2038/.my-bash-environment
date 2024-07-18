@@ -85,7 +85,7 @@ function _n2038_snapper_echo_snapshot_description_by_raw_id() {
   local config="${1}" && { shift || true; }
   local snapshot_id="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${snapshot_id}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config> <snapshot_id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config> <snapshot_id>${c_return}" || return "$?"
     return 1
   fi
 

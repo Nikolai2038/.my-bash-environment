@@ -87,10 +87,10 @@ function n2038_snapper_list_snapshots_all() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config>${c_return}" || return "$?"
     local list_of_available_configs
     list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    print_info "Available configs: ${list_of_available_configs}" || return "$?"
+    print_info "Available configs: ${c_highlight}${list_of_available_configs}${c_return}" || return "$?"
     return 1
   fi
 
@@ -98,7 +98,7 @@ function n2038_snapper_list_snapshots_all() {
   # Use sudo here to get password before any output
   # shellcheck disable=SC2086
   print_info "============================================================" || return "$?"
-  print_info "${column_name_1} │ date                │ description" || return "$?"
+  print_info "${c_highlight}${column_name_1}${c_return} │ ${c_highlight}date${c_return}                │ ${c_highlight}description${c_return}" || return "$?"
   print_info "============================================================" || return "$?"
 
   # shellcheck disable=SC2086

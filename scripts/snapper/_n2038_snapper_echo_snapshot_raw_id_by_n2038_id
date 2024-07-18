@@ -85,7 +85,7 @@ function _n2038_snapper_echo_snapshot_raw_id_by_n2038_id() {
   local config="${1}" && { shift || true; }
   local n2038_id="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${n2038_id}" ]; then
-    print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
+    print_error "Usage: ${c_highlight}${FUNCNAME[0]} <config> <n2038_id>${c_return}" || return "$?"
     return 1
   fi
 
@@ -94,7 +94,7 @@ function _n2038_snapper_echo_snapshot_raw_id_by_n2038_id() {
   snapshot_id="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns number,userdata | grep "n2038_id=${n2038_id}," | awk '{print $1}')" || snapshot_id=""
 
   if [ -z "${snapshot_id}" ]; then
-    print_error "Snapshot with n2038_id=${n2038_id} not found!" || return "$?"
+    print_error "Snapshot with ${c_highlight}n2038_id=${n2038_id}${c_return} not found!" || return "$?"
     return 1
   fi
 
