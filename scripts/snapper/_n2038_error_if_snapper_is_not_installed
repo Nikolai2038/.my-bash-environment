@@ -71,6 +71,10 @@ source "../_messages"
 
 # Returns 0 if Snapper is installed, and returns 1 - if Snapper is not installed
 function _f2038_error_if_snapper_is_not_installed() {
+  if ((IS_DEBUG_BASH)); then
+    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+  fi
+
   if ! snapper --help > /dev/null 2>&1; then
     print_error "Snapper is not installed!" || return "$?"
     return 1

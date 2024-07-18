@@ -77,6 +77,10 @@ source "./n2038_snapper_list_configs"
 # Prints list of snapshots with n2038_snapper_userdata_tag tag in them for specified config
 # Argument 1: Config name
 function f2038_snapper_list_snapshots_n2038() {
+  if ((IS_DEBUG_BASH)); then
+    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+  fi
+
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 

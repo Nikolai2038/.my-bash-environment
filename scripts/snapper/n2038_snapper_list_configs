@@ -71,6 +71,10 @@ source "./_n2038_error_if_snapper_is_not_installed"
 
 # Prints list of available Snapper configs
 function f2038_snapper_list_configs() {
+  if ((IS_DEBUG_BASH)); then
+    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+  fi
+
   _f2038_error_if_snapper_is_not_installed || return "$?"
 
   # We use "echo" to force output on separate lines

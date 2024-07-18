@@ -75,6 +75,10 @@ source "./_n2038_error_if_snapper_is_not_installed"
 
 # Print snapshot description for specified config with specified n2038_number
 function _f2038_snapper_echo_snapshot_description_by_n2038_id() {
+  if ((IS_DEBUG_BASH)); then
+    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+  fi
+
   _f2038_error_if_snapper_is_not_installed || return "$?"
   _f2038_update_sudo_rights || return "$?"
 

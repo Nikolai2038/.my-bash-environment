@@ -71,6 +71,10 @@
 
 # Template function
 function n2038_template() {
+  if ((IS_DEBUG_BASH)); then
+    echo "Calling \"${FUNCNAME[0]}\"..." >&2
+  fi
+
   echo "Hello, World!"
   return 0
 }
