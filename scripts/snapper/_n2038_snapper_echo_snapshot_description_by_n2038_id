@@ -74,14 +74,14 @@ source "./_n2038_error_if_snapper_is_not_installed"
 }
 
 # Print snapshot description for specified config with specified n2038_number
-function _f2038_snapper_echo_snapshot_description_by_n2038_id() {
+function _n2038_snapper_echo_snapshot_description_by_n2038_id() {
   # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
     echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
   fi
 
-  _f2038_error_if_snapper_is_not_installed || return "$?"
-  _f2038_update_sudo_rights || return "$?"
+  _n2038_error_if_snapper_is_not_installed || return "$?"
+  _n2038_update_sudo_rights || return "$?"
 
   local config="${1}" && { shift || true; }
   local n2038_id="${1}" && { shift || true; }
@@ -107,6 +107,6 @@ function _f2038_snapper_echo_snapshot_description_by_n2038_id() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _f2038_snapper_echo_snapshot_description_by_n2038_id "${@}"
+    _n2038_snapper_echo_snapshot_description_by_n2038_id "${@}"
   fi
 }

@@ -76,20 +76,20 @@ source "./n2038_snapper_list_configs"
 
 # Prints list of all snapshots for specified config
 # Argument 1: Config name
-function f2038_snapper_list_snapshots_all() {
+function n2038_snapper_list_snapshots_all() {
   # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
     echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
   fi
 
-  _f2038_error_if_snapper_is_not_installed || return "$?"
-  _f2038_update_sudo_rights || return "$?"
+  _n2038_error_if_snapper_is_not_installed || return "$?"
+  _n2038_update_sudo_rights || return "$?"
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
     print_error "Usage: ${FUNCNAME[0]} <config>" || return "$?"
     local list_of_available_configs
-    list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
+    list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     print_info "Available configs: ${list_of_available_configs}" || return "$?"
     return 1
   fi
@@ -112,6 +112,6 @@ function f2038_snapper_list_snapshots_all() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    f2038_snapper_list_snapshots_all "${@}"
+    n2038_snapper_list_snapshots_all "${@}"
   fi
 }

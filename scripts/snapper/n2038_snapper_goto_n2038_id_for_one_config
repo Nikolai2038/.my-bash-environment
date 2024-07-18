@@ -78,20 +78,20 @@ source "./n2038_snapper_list_configs"
 }
 
 # Rollback specified config to specified snapshot n2038_number
-function f2038_snapper_goto_n2038_id_for_one_config() {
+function n2038_snapper_goto_n2038_id_for_one_config() {
   # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
     echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
   fi
 
-  _f2038_error_if_snapper_is_not_installed || return "$?"
-  _f2038_update_sudo_rights || return "$?"
+  _n2038_error_if_snapper_is_not_installed || return "$?"
+  _n2038_update_sudo_rights || return "$?"
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
     print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
     local list_of_available_configs
-    list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
+    list_of_available_configs="$(n2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
     print_info "Available configs: ${list_of_available_configs}" || return "$?"
     return 1
   fi
@@ -103,10 +103,10 @@ function f2038_snapper_goto_n2038_id_for_one_config() {
   fi
 
   local snapshot_id
-  snapshot_id="$(_f2038_snapper_echo_snapshot_raw_id_by_n2038_id "${config}" "${n2038_id}")" || return "$?"
+  snapshot_id="$(_n2038_snapper_echo_snapshot_raw_id_by_n2038_id "${config}" "${n2038_id}")" || return "$?"
   print_info "Snapshot ID: \"${snapshot_id}\"." || return "$?"
 
-  f2038_snapper_goto_raw_id_for_one_config "${config}" "${snapshot_id}" || return "$?"
+  n2038_snapper_goto_raw_id_for_one_config "${config}" "${snapshot_id}" || return "$?"
 
   return 0
 }
@@ -114,6 +114,6 @@ function f2038_snapper_goto_n2038_id_for_one_config() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    f2038_snapper_goto_n2038_id_for_one_config "${@}"
+    n2038_snapper_goto_n2038_id_for_one_config "${@}"
   fi
 }

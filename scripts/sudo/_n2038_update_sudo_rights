@@ -70,7 +70,7 @@
 }
 
 # Simply updates sudo rights for terminal session
-function _f2038_update_sudo_rights() {
+function _n2038_update_sudo_rights() {
   # (REUSE) Print debug message
   if ((IS_DEBUG_BASH)); then
     echo "Calling \"${FUNCNAME[0]}$(args_count="${#}"; for((arg_id = 1; arg_id <= args_count; arg_id++)); do eval "echo -n \" '\${${arg_id}}'\""; done)\"..." >&2
@@ -83,6 +83,6 @@ function _f2038_update_sudo_rights() {
 # Add the ability to execute this script by itself (for debugging)
 {
   if [ "${0}" == "${BASH_SOURCE[0]}" ]; then
-    _f2038_update_sudo_rights "${@}"
+    _n2038_update_sudo_rights "${@}"
   fi
 }

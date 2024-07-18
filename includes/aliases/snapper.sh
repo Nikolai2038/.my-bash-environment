@@ -56,7 +56,7 @@ _n2038_snapper_create_snapshots_for_all_configs() {
 
   # Get configs as list
   local configs_list
-  configs_list="$(f2038_snapper_list_configs)"
+  configs_list="$(n2038_snapper_list_configs)"
 
   # Convert to array
   declare -a configs
