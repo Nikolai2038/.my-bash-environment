@@ -91,10 +91,10 @@ function _n2038_snapper_echo_snapshot_raw_id_by_n2038_id() {
 
   local snapshot_id
   # shellcheck disable=SC2086
-  snapshot_id="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns number,userdata | grep "n2038_id=${n2038_id}," | awk '{print $1}')" || return "$?"
+  snapshot_id="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns number,userdata | grep "n2038_id=${n2038_id}," | awk '{print $1}')" || snapshot_id=""
 
   if [ -z "${snapshot_id}" ]; then
-    print_error "Snapshot not found!" || return "$?"
+    print_error "Snapshot with n2038_id=${n2038_id} not found!" || return "$?"
     return 1
   fi
 
