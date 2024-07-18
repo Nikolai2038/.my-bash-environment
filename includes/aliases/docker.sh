@@ -46,7 +46,7 @@ dce() {
 
 unalias di > /dev/null 2>&1
 di() {
-  info=$(docker image list --format "${_C_SUCCESS}{{.Repository}}${_C_TEXT}:${_C_BORDER_USUAL}{{.Tag}}${_C_TEXT} ({{.Size}})${_C_RESET}" --filter "dangling=false" | grep -v '<none>' | sort)
+  info=$(docker image list --format "${_c_success}{{.Repository}}${_c_text}:${_c_border_usual}{{.Tag}}${_c_text} ({{.Size}})${_c_reset}" --filter "dangling=false" | grep -v '<none>' | sort)
   my_echo_en "${info}" | less -R
   return 0
 }

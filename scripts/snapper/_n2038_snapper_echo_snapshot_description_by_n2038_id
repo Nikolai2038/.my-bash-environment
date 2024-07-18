@@ -56,6 +56,7 @@
 }
 
 # Imports
+source "../_messages"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
@@ -80,7 +81,7 @@ function _f2038_snapper_echo_snapshot_description_by_n2038_id() {
   local config="${1}" && { shift || true; }
   local n2038_id="${1}" && { shift || true; }
   if [ -z "${config}" ] || [ -z "${n2038_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
     return 1
   fi
 
@@ -89,7 +90,7 @@ function _f2038_snapper_echo_snapshot_description_by_n2038_id() {
   snapshot_description="$(${n2038_sudo_prefix}snapper -c "${config}" list --columns userdata,description | sed -En "s/^n2038_id=${n2038_id}.+?[\\|│]\\s*(.+)\\s*\$/\\1/p")" || return "$?"
 
   if [ -z "${snapshot_description}" ]; then
-    echo "Snapshot not found!" >&2
+    print_error "Snapshot not found!" || return "$?"
     return 1
   fi
 

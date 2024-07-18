@@ -56,6 +56,7 @@
 }
 
 # Imports
+source "../_messages"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
@@ -80,7 +81,7 @@ function f2038_snapper_create_with_description_for_main_configs() {
   local description="${1}" && { shift || true; }
   local prefix="${1-${n2038_by_hand_prefix}}" && { shift || true; }
   if [ -z "${description}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <description> [prefix=\"${n2038_by_hand_prefix}\"]" >&2
+    print_error "Usage: ${FUNCNAME[0]} <description> [prefix=\"${n2038_by_hand_prefix}\"]" || return "$?"
     return 1
   fi
 

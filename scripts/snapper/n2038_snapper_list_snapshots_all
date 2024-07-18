@@ -56,6 +56,7 @@
 }
 
 # Imports
+source "../_messages"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
@@ -81,24 +82,24 @@ function f2038_snapper_list_snapshots_all() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <config>" || return "$?"
     local list_of_available_configs
     list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    echo "Available configs: ${list_of_available_configs}" >&2
+    print_info "Available configs: ${list_of_available_configs}" || return "$?"
     return 1
   fi
 
   local column_name_1="${n2038_snapper_userdata_tag}_number"
   # Use sudo here to get password before any output
   # shellcheck disable=SC2086
-  echo "============================================================"
-  echo "${column_name_1} │ date                │ description"
-  echo "============================================================"
+  print_info "============================================================" || return "$?"
+  print_info "${column_name_1} │ date                │ description" || return "$?"
+  print_info "============================================================" || return "$?"
 
   # shellcheck disable=SC2086
   ${n2038_sudo_prefix}snapper -c "${config}" --iso list --columns number,date,userdata,description || return "$?"
 
-  echo "============================================================"
+  print_info "============================================================" || return "$?"
 
   return 0
 }

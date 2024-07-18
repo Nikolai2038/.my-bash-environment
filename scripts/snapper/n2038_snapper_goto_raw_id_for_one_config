@@ -56,6 +56,7 @@
 }
 
 # Imports
+source "../_messages"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
@@ -84,52 +85,52 @@ function f2038_snapper_goto_raw_id_for_one_config() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <raw id>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <config> <raw id>" || return "$?"
     local list_of_available_configs
     list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    echo "Available configs: ${list_of_available_configs}" >&2
+    print_info "Available configs: ${list_of_available_configs}" || return "$?"
     return 1
   fi
 
   local snapshot_id="${1}" && shift
   if [ -z "${snapshot_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <raw id>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <config> <raw id>" || return "$?"
     return 1
   fi
 
   local subvolume_path
   subvolume_path="$(sudo sed -En 's/^SUBVOLUME="(.+?)"$/\1/p' "/etc/snapper/configs/${config}")" || return "$?"
-  echo "Subvolume path: \"${subvolume_path}\"." >&2
+  print_info "Subvolume path: \"${subvolume_path}\"." || return "$?"
 
   local subvolume_name
   subvolume_name="$(sed -En "s#^UUID=([^[:blank:]]+).+?[[:blank:]]+${subvolume_path}[[:blank:]]+btrfs[[:blank:]]+.+?subvol=([^[:blank:]]+).*\$#\\2#p" /etc/fstab)" || return "$?"
-  echo "Subvolume name: \"${subvolume_name}\"." >&2
+  print_info "Subvolume name: \"${subvolume_name}\"." || return "$?"
 
   local subvolume_uuid
   subvolume_uuid="$(sed -En "s#^UUID=([^[:blank:]]+).+?[[:blank:]]+${subvolume_path}[[:blank:]]+btrfs[[:blank:]]+.+?subvol=([^[:blank:]]+).*\$#\\1#p" /etc/fstab)" || return "$?"
-  echo "Subvolume UUID: \"${subvolume_uuid}\"." >&2
+  print_info "Subvolume UUID: \"${subvolume_uuid}\"." || return "$?"
 
   local subvolume_raw_path_prefix
   subvolume_raw_path_prefix="$(grep -v 'subvol=' /etc/fstab | sed -En "s#^UUID=${subvolume_uuid}.+?[[:blank:]]+([^[:blank:]]+)[[:blank:]]+btrfs[[:blank:]]+.+?\$#\\1#p")" || return "$?"
   local subvolume_raw_path="${subvolume_raw_path_prefix}/${subvolume_name}" || return "$?"
-  echo "Subvolume raw path: \"${subvolume_raw_path}\"." >&2
+  print_info "Subvolume raw path: \"${subvolume_raw_path}\"." || return "$?"
   if [ ! -e "${subvolume_raw_path}" ]; then
-    echo "Subvolume raw path \"${subvolume_raw_path}\" does not exist!" >&2
+    print_info "Subvolume raw path \"${subvolume_raw_path}\" does not exist!" || return "$?"
     return 1
   fi
 
   local subvolume_snapshots_raw_path="${subvolume_raw_path_prefix}/${subvolume_name}-snapshots" || return "$?"
-  echo "Subvolume snapshots raw path: \"${subvolume_snapshots_raw_path}\"." >&2
+  print_info "Subvolume snapshots raw path: \"${subvolume_snapshots_raw_path}\"." || return "$?"
   if [ ! -e "${subvolume_snapshots_raw_path}" ]; then
-    echo "Subvolume snapshots raw path \"${subvolume_snapshots_raw_path}\" does not exist!" >&2
+    print_info "Subvolume snapshots raw path \"${subvolume_snapshots_raw_path}\" does not exist!" || return "$?"
     return 1
   fi
 
-  echo "Snapshot ID: \"${snapshot_id}\"." >&2
+  print_info "Snapshot ID: \"${snapshot_id}\"." || return "$?"
 
   local snapshot_description
   snapshot_description="$(_f2038_snapper_echo_snapshot_description_by_raw_id "${config}" "${snapshot_id}")" || return "$?"
-  echo "Snapshot description: \"${snapshot_description}\"." >&2
+  print_info "Snapshot description: \"${snapshot_description}\"." || return "$?"
 
   # Create auto-backup snapshot
   # We pass empty string for second argument to not add prefix
@@ -157,12 +158,12 @@ function f2038_snapper_goto_raw_id_for_one_config() {
       # Discard changes if something went wrong
       ${n2038_sudo_prefix}mv --no-target-directory "${subvolume_raw_path}_old" "${subvolume_raw_path}" || return "$?"
 
-      echo "Something went wrong! Changes were discarded." >&2
+      print_error "Something went wrong! Changes were discarded." || return "$?"
       return 1
     }
   fi
 
-  echo "Success! Now you have to reboot to apply changes!" >&2
+  print_success "Success! Now you have to reboot to apply changes!" || return "$?"
 
   return 0
 }

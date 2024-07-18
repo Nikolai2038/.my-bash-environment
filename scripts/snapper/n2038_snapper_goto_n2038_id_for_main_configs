@@ -56,6 +56,7 @@
 }
 
 # Imports
+source "../_messages"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
@@ -84,7 +85,7 @@ function f2038_snapper_goto_n2038_id_for_main_configs() {
 
   local n2038_id="${1}" && shift
   if [ -z "${n2038_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <n2038_id>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <n2038_id>" || return "$?"
     return 1
   fi
 
@@ -98,7 +99,7 @@ function f2038_snapper_goto_n2038_id_for_main_configs() {
   # Create snapshot for each config
   local config
   for config in "${configs[@]}"; do
-    f2038_snapper_goto_n2038_id_for_one_config "${config}" "${n2038_id}" || continue
+    f2038_snapper_goto_n2038_id_for_one_config "${config}" "${n2038_id}" || return "$?"
   done
 
   return 0

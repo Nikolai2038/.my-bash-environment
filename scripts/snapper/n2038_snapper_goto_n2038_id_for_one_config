@@ -56,6 +56,7 @@
 }
 
 # Imports
+source "../_messages"
 source "../sudo/_constants"
 source "../sudo/_n2038_update_sudo_rights"
 source "./_constants"
@@ -83,22 +84,22 @@ function f2038_snapper_goto_n2038_id_for_one_config() {
 
   local config="${1}" && shift
   if [ -z "${config}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
     local list_of_available_configs
     list_of_available_configs="$(f2038_snapper_list_configs | tr '\n' ' ')" || return "$?"
-    echo "Available configs: ${list_of_available_configs}" >&2
+    print_info "Available configs: ${list_of_available_configs}" || return "$?"
     return 1
   fi
 
   local n2038_id="${1}" && shift
   if [ -z "${n2038_id}" ]; then
-    echo "Usage: ${FUNCNAME[0]} <config> <n2038_id>" >&2
+    print_error "Usage: ${FUNCNAME[0]} <config> <n2038_id>" || return "$?"
     return 1
   fi
 
   local snapshot_id
   snapshot_id="$(_f2038_snapper_echo_snapshot_raw_id_by_n2038_id "${config}" "${n2038_id}")" || return "$?"
-  echo "Snapshot ID: \"${snapshot_id}\"." >&2
+  print_info "Snapshot ID: \"${snapshot_id}\"." || return "$?"
 
   f2038_snapper_goto_raw_id_for_one_config "${config}" "${snapshot_id}" || return "$?"
 

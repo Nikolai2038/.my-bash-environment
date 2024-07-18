@@ -73,21 +73,21 @@
 # Colors for messages
 # ========================================
 # Color for message
-export C_INFO='\e[0;36m'
+export c_info='\e[0;36m'
 # Color for successful execution
-export C_SUCCESS='\e[0;32m'
+export c_success='\e[0;32m'
 # Color for highlighted text
-export C_HIGHLIGHT='\e[1;95m'
+export c_highlight='\e[1;95m'
 # Color for error
-export C_WARNING='\e[0;33m'
+export c_warning='\e[0;33m'
 # Color for error
-export C_ERROR='\e[0;31m'
+export c_error='\e[0;31m'
 
 # Reset color
-export C_RESET='\e[0m'
+export c_reset='\e[0m'
 
 # Special text that will be replaced with the previous one
-export C_RETURN='COLOR_RETURN'
+export c_return='COLOR_RETURN'
 # ========================================
 
 # Prints a message with the specified prefix and text
@@ -98,13 +98,13 @@ function print_color_message() {
   # Replaces the special string with the text color
   # (don't forget to escape the first color character with an additional backslash)
   if [ -n "${main_color}" ]; then
-    text=$(echo -e "${text}" | sed -E "s/${C_RETURN}/\\${main_color}/g") || return "$?"
+    text=$(echo -e "${text}" | sed -E "s/${c_return}/\\${main_color}/g") || return "$?"
   else
-    text=$(echo -e "${text}" | sed -E "s/${C_RETURN}//g") || return "$?"
+    text=$(echo -e "${text}" | sed -E "s/${c_return}//g") || return "$?"
   fi
 
   # shellcheck disable=SC2320
-  echo -e "${@}" "${main_color}${text}${C_RESET}" || return "$?"
+  echo -e "${@}" "${main_color}${text}${c_reset}" || return "$?"
 
   return 0
 }
@@ -117,7 +117,7 @@ function print_info() {
     extra_args=("${extra_args[@]}" -n)
     local text="${1}" && shift
   fi
-  print_color_message "${C_INFO}" "${text}" "${extra_args[@]}" >&2 || return "$?"
+  print_color_message "${c_info}" "${text}" "${extra_args[@]}" >&2 || return "$?"
   return 0
 }
 
@@ -129,7 +129,7 @@ function print_success() {
     extra_args=("${extra_args[@]}" -n)
     local text="${1}" && shift
   fi
-  print_color_message "${C_SUCCESS}" "${text}" "${extra_args[@]}" >&2 || return "$?"
+  print_color_message "${c_success}" "${text}" "${extra_args[@]}" >&2 || return "$?"
   return 0
 }
 
@@ -141,7 +141,7 @@ function print_highlight() {
     extra_args=("${extra_args[@]}" -n)
     local text="${1}" && shift
   fi
-  print_color_message "${C_HIGHLIGHT}" "${text}" "${extra_args[@]}" >&2 || return "$?"
+  print_color_message "${c_highlight}" "${text}" "${extra_args[@]}" >&2 || return "$?"
   return 0
 }
 
@@ -153,7 +153,7 @@ function print_warning() {
     extra_args=("${extra_args[@]}" -n)
     local text="${1}" && shift
   fi
-  print_color_message "${C_WARNING}" "${text}" "${extra_args[@]}" >&2 || return "$?"
+  print_color_message "${c_warning}" "${text}" "${extra_args[@]}" >&2 || return "$?"
   return 0
 }
 
@@ -165,7 +165,7 @@ function print_error() {
     extra_args=("${extra_args[@]}" -n)
     local text="${1}" && shift
   fi
-  print_color_message "${C_ERROR}" "${text}" "${extra_args[@]}" >&2 || return "$?"
+  print_color_message "${c_error}" "${text}" "${extra_args[@]}" >&2 || return "$?"
   return 0
 }
 

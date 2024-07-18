@@ -7,12 +7,12 @@ export EDITOR=vim
 
 # We need "\[" and "\]" to help bash understand, that it is colors (otherwise bash will break when we navigate in commands history).
 # But we add them in get_function_definition_with_colors_replaced.
-export _C_TEXT="\033[38;5;15m"
-export _C_ERROR="\033[38;5;01m"
-export _C_SUCCESS="\033[38;5;02m"
-export _C_BORDER_USUAL="\033[38;5;27m"
-export _C_BORDER_ROOT="\033[38;5;90m"
-export _C_RESET='\e[0m'
+export _c_text="\033[38;5;15m"
+export _c_error="\033[38;5;01m"
+export _c_success="\033[38;5;02m"
+export _c_border_usual="\033[38;5;27m"
+export _c_border_root="\033[38;5;90m"
+export _c_reset='\e[0m'
 
 DIRECTORY_WITH_THIS_SCRIPT="${HOME}/.my-bash-environment"
 # ----------------------------------------
@@ -110,11 +110,11 @@ update_shell_info() {
   # If user is root
   # Second condition is for MINGW in Windows - we are checking for admin rights
   if { [ -z "${MSYSTEM}" ] && [ "$(id --user "$(whoami)")" = "0" ]; } || { [ -n "${MSYSTEM}" ] && sfc 2>&1 | tr -d '\0' | grep "SCANNOW" > /dev/null; }; then
-    export _C_BORDER="${_C_BORDER_ROOT}"
+    export _C_BORDER="${_c_border_root}"
     export sudo_prefix=""
     export PS_SYMBOL="#"
   else
-    export _C_BORDER="${_C_BORDER_USUAL}"
+    export _C_BORDER="${_c_border_usual}"
     export sudo_prefix="sudo "
     export PS_SYMBOL='$'
   fi
@@ -122,18 +122,18 @@ update_shell_info() {
   if [ "${CURRENT_SHELL_NAME}" = "bash" ]; then
     # Braces "\[" and "\]" are required, so "bash" can understand, that this is colors and not output.
     # If we do not use them, the shell will break when we try to navigate in commands' history.
-    C_TEXT="\[${_C_TEXT}\]"
-    C_ERROR="\[${_C_ERROR}\]"
-    C_SUCCESS="\[${_C_SUCCESS}\]"
+    c_text="\[${_c_text}\]"
+    c_error="\[${_c_error}\]"
+    c_success="\[${_c_success}\]"
     C_BORDER="\[${_C_BORDER}\]"
-    C_RESET="\[${_C_RESET}\]"
+    c_reset="\[${_c_reset}\]"
   else
     # "sh" does not have commands' history, and braces will result in just text, so we don't use them here
-    C_TEXT="${_C_TEXT}"
-    C_ERROR="${_C_ERROR}"
-    C_SUCCESS="${_C_SUCCESS}"
+    c_text="${_c_text}"
+    c_error="${_c_error}"
+    c_success="${_c_success}"
     C_BORDER="${_C_BORDER}"
-    C_RESET="${_C_RESET}"
+    c_reset="${_c_reset}"
   fi
   return 0
 }
@@ -154,9 +154,9 @@ export_function_for_sh my_echo_en
 ps1_function() {
   update_shell_info || return "$?"
 
-  error_code_color="${C_ERROR}"
+  error_code_color="${c_error}"
   if [ "${command_result}" -eq 0 ]; then
-    error_code_color="${C_SUCCESS}"
+    error_code_color="${c_success}"
   fi
 
   git_part=""
@@ -177,16 +177,16 @@ ps1_function() {
       parent_git_branch_name="$(git -C "${parent_repository}" branch 2> /dev/null | sed -En 's/^\* (.+)$/\1/p')" || git_branch_name=""
 
       if [ -n "${parent_git_branch_name}" ]; then
-        git_part="${git_part}${C_BORDER}[${C_SUCCESS}${parent_git_branch_name}${C_BORDER}]─[submodule]─"
+        git_part="${git_part}${C_BORDER}[${c_success}${parent_git_branch_name}${C_BORDER}]─[submodule]─"
       else
-        git_part="${git_part}${C_BORDER}[${C_ERROR}???${C_BORDER}]─[submodule]─"
+        git_part="${git_part}${C_BORDER}[${c_error}???${C_BORDER}]─[submodule]─"
       fi
     fi
 
     if [ -n "${git_branch_name}" ]; then
-      git_part="${git_part}${C_BORDER}[${C_SUCCESS}${git_branch_name}${C_BORDER}]"
+      git_part="${git_part}${C_BORDER}[${c_success}${git_branch_name}${C_BORDER}]"
     else
-      git_part="${git_part}${C_BORDER}[${C_ERROR}???${C_BORDER}]"
+      git_part="${git_part}${C_BORDER}[${c_error}???${C_BORDER}]"
     fi
   fi
 
@@ -214,7 +214,7 @@ ps1_function() {
     if hostname --version > /dev/null 2>&1; then
       HOSTNAME="$(hostname)"
     else
-      HOSTNAME="${C_ERROR}unknown${C_BORDER}"
+      HOSTNAME="${c_error}unknown${C_BORDER}"
     fi
   fi
 
@@ -222,10 +222,10 @@ ps1_function() {
   # ${PWD} = \w
   # ${USER} or ${USERNAME} in MINGW = \u
   # ${HOSTNAME} = \h
-  my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─${execution_time}[$(date +'%Y-%m-%d]─[%a]─[%H:%M:%S')]${C_RESET}
+  my_echo_en "${C_BORDER}└─[${error_code_color}$(printf '%03d' "${command_result#0}")${C_BORDER}]─${execution_time}[$(date +'%Y-%m-%d]─[%a]─[%H:%M:%S')]${c_reset}
 
-${C_BORDER}┌─[$(whoami)@${HOSTNAME}:${C_SUCCESS}${PWD}${C_BORDER}]${git_part}${C_RESET}
-${C_BORDER}├${pstree_part}─[${C_SUCCESS}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${C_RESET}"
+${C_BORDER}┌─[$(whoami)@${HOSTNAME}:${c_success}${PWD}${C_BORDER}]${git_part}${c_reset}
+${C_BORDER}├${pstree_part}─[${c_success}${current_shell_name_to_show}${C_BORDER}]─${PS_SYMBOL} ${c_reset}"
 
   return 0
 }
@@ -233,7 +233,7 @@ export_function_for_sh ps1_function
 
 ps2_function() {
   update_shell_info || return "$?"
-  my_echo_en "${C_BORDER}├─${C_BORDER}> ${C_RESET}"
+  my_echo_en "${C_BORDER}├─${C_BORDER}> ${c_reset}"
   return 0
 }
 export_function_for_sh ps2_function
