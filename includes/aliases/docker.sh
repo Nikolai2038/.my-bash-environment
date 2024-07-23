@@ -13,6 +13,7 @@ alias dcstart='docker-compose start'
 alias dcstop='docker-compose stop'
 alias dcr='docker-compose restart'
 alias dcl='docker-compose logs'
+alias dcps='docker-compose ps'
 
 unalias dcbu > /dev/null 2>&1
 dcbu() {
