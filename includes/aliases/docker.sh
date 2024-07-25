@@ -3,7 +3,11 @@
 # ----------------------------------------
 # Docker aliases
 # ----------------------------------------
-alias dps='docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}"'
+unalias dps > /dev/null 2>&1
+dps() {
+  docker ps --format "table {{.Names}}\t{{.Image}}\t{{.RunningFor}}\t{{.Status}}\t{{.Networks}}\t{{.Ports}}" "$@" | less
+  return 0
+}
 alias dpsa='dps --all'
 alias dc='docker-compose'
 alias dcu='docker-compose up --detach --wait'

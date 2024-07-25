@@ -310,6 +310,10 @@ fi
 # We use some functions as aliases.
 # But we must unalias functions' names if they exist, because alias has more priority than function.
 
+# Must go before docker aliases, because they use "less" alias
+# shellcheck source=./includes/aliases/other.sh
+. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/other.sh"
+
 # shellcheck source=./includes/aliases/apt.sh
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/apt.sh"
 # shellcheck source=./includes/aliases/docker.sh
@@ -320,44 +324,4 @@ fi
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/ls.sh"
 # shellcheck source=./includes/aliases/pacman_and_yay.sh
 . "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/pacman_and_yay.sh"
-# shellcheck source=./includes/aliases/other.sh
-. "${DIRECTORY_WITH_THIS_SCRIPT}/includes/aliases/other.sh"
-
-# Use as alias but without space
-unalias examples > /dev/null 2>&1
-examples() {
-  less -R << EOF
-$(curl "https://cheat.sh/${*}")
-EOF
-  return 0
-}
-
-# journalctl
-alias jctl='journalctl --pager-end --no-hostname --boot=0 --output=short'
-alias jctlf='jctl --follow'
-
-# Binary can be called "batcat"
-if { { ! bat --help; } && batcat --help; } > /dev/null 2>&1; then
-  alias bat="batcat"
-fi
-
-# "bat" is colorized "cat", so we use it, if it is installed.
-if bat --help > /dev/null 2>&1; then
-  alias cat="bat --style='plain' --paging=never --theme='Visual Studio Dark+'"
-
-  # pat pat
-  alias pat="cat --paging=always"
-
-  alias less="pat"
-fi
-
-# Not all "su" commands have this option, so we check for that
-if { su --help | grep 'whitelist-environment'; } > /dev/null 2>&1; then
-  # We need PSTREE_MINUS here to not reset depth level
-  alias su='su --whitelist-environment=PS_TREE_MINUS'
-fi
-
-# TODO: Some problems with that - disabled for now
-# # To use aliases in sudo too we add alias for it with space
-# alias sudo="sudo --preserve-env=PS_TREE_MINUS "
 # ========================================
