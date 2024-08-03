@@ -11,10 +11,14 @@ alias pu="${sudo_prefix}pacman --noconfirm --sync --refresh --refresh --needed -
 alias yu="yay --noconfirm --sync --refresh --refresh --needed --sysupgrade && ${sudo_prefix}mkinitcpio -P"
 alias puyu="${sudo_prefix}pacman --noconfirm --sync --refresh --refresh --needed --sysupgrade && yay --noconfirm --sync --refresh --refresh --needed --sysupgrade && ${sudo_prefix}mkinitcpio -P"
 
-# Install packages
+# Install packages.
+# Commands with "-hand" needed for removing conflicting packages, when installing other ones.
 # shellcheck disable=2139
-alias pi="${sudo_prefix}pacman --noconfirm --sync --refresh --needed"
-alias yi="yay --noconfirm --sync --refresh --needed"
+alias pi-hand="${sudo_prefix}pacman --sync --refresh --needed"
+alias yi-hand="yay --sync --refresh --needed"
+# With auto confirm
+alias pi="pi-hand --noconfirm"
+alias yi="yi-hand --noconfirm"
 
 # Remove packages
 # "pr" command exists (convert text files for printing), but I don't use it.
